@@ -1,0 +1,33 @@
+name: CI
+on:
+    push:
+        branches:
+        - main
+
+jobs:
+    setup_uv_add_dependencies_and_test:
+        # Runner
+        runs-on: ubuntu-latest
+        # Steps to be run in the runner
+        steps:
+          # Ubuntu latest VM clones code
+        - name: Checkout code
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+          # uv and uvx are installed using astral-sh/setup-uv Github action
+        - name: Install uv and Python
+          uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+          with:
+            version: "0.12.21"
+            python-version: "3.12"
+        # Installing project dependencies defined in pyproject.toml
+        - name: Install dependencies
+          run: uv sync --locked --dev
+        # Linting the code using ruff by astral
+        - name: Lint
+          run: uv run ruff check .
+        # Running the tests inside tests directory using pytest library
+        - name: Run tests
+          run: uv run pytest -q
+        # Build docker image using Dockerfile present in the pwd
+        - name: Build docker image
+          run: docker build -t python-api:${{github.sha}} .
