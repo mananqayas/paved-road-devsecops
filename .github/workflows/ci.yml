@@ -5,7 +5,7 @@ on:
         - main
 
 jobs:
-    setup_uv_add_dependencies_and_test:
+    python:
         # Runner
         runs-on: ubuntu-latest
         # Steps to be run in the runner
@@ -28,6 +28,17 @@ jobs:
         # Running the tests inside tests directory using pytest library
         - name: Run tests
           run: uv run pytest -q
+    docker:
+        runs-on: ubuntu-latest
+        steps:
         # Build docker image using Dockerfile present in the pwd
         - name: Build docker image
           run: docker build -t python-api:${{github.sha}} .
+    terraform:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Terraform format
+          run: terraform -chdir=terraform -check
+        - name: Terraform init and validate
+          run: terraform -chdir=terraform init -input=false && terraform -chdir=terraform validate
+
