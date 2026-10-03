@@ -33,7 +33,6 @@ jobs:
         steps:
         - name: Checkout code
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-          # uv and uvx are installed using astral-sh/setup-uv Github action
         # Build docker image using Dockerfile present in the pwd
         - name: Build docker image
           run: docker build -t python-api:${{github.sha}} .
@@ -42,7 +41,8 @@ jobs:
         steps:
         - name: Checkout code
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-          # uv and uvx are installed using astral-sh/setup-uv Github action
+        # Setup terraform using hashicorp's setup-terraform action
+        - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
         - name: Terraform format
           run: terraform -chdir=terraform -check
         - name: Terraform init and validate
