@@ -33,7 +33,7 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 **Phase 1. (this phase):** sample app (FastAPI) + Dockerfile + Terraform (null, $0)
 
 + baseline Actions workflow (python test, docker build, terraform fmt/validate)
-+ branch protection. Security scanners arrive in Phase 2.0-4.0.
++ branch protection (0 reviewers for solo setup). Security scanners arrive in Phase 2.0-4.0.
 
 
 ## Threat model

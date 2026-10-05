@@ -34,7 +34,7 @@ gh api --method POST "/repos/${OWNER}/${REPO_NAME}/rulesets" -H "Accept: applica
     {
       "type": "pull_request",
       "parameters": {
-        "required_approving_review_count": 1,
+        "required_approving_review_count": 0,
         "dismiss_stale_reviews_on_push": true,
         "require_code_owner_review": false,
         "require_last_push_approval": false,
@@ -47,8 +47,14 @@ gh api --method POST "/repos/${OWNER}/${REPO_NAME}/rulesets" -H "Accept: applica
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
           {
-            "context": "ci/build"
-          }
+            "context": "python"
+          },
+          {
+            "context": "docker"
+          },
+          {
+            "context": "terraform"
+          },
         ]
       }
     }
