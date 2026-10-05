@@ -19,7 +19,7 @@ def test_hello_default():
     assert r.status_code == 200
     assert r.json()["message"] == "hello, world"
 
-def test_hello_santizers_input():
+def test_hello_sanitizes_input():
     r = client.get("/hello", params={"name": "bob<script>"})
     assert r.status_code == 200
     assert "<" not in r.json()["message"]

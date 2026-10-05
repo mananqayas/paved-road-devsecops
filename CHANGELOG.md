@@ -10,6 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - FastAPI sample (/healthz, /hello) with pytest suite
 - Dockerfile: python:3.12-slim, non-root user, healthcheck
-- Terraform scafflod on null provider ($0, no credentials)
+- Terraform scaffold on null provider ($0, no credentials)
 - Baseline CI: python, docker (needs python), terraform jobs
 - README, ADRs 0001/0002, Makefile, CHANGELOG

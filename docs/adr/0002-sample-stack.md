@@ -8,7 +8,7 @@ Status: Accepted
 The pipeline needs a realistic-but-boring sample app (API + Dockerfile + Terraform) that scanners can chew on in Phase 2.0-4.0. It must stay cheap, fast in CI, and familiar enough that custom Semgrep rules feel natural.
 
 ## Decision
-- **FastAPI** (not Flask): typed endpoints make better Semgrep custom-rule targets; maches my Python background.
+- **FastAPI** (not Flask): typed endpoints make better Semgrep custom-rule targets; matches my Python background.
 - `python:3.12-slim` (not alpine/distroless yet): glibc compatibility avoids weird build failures in Phase 1.0; image-hardening is a Phase 3.0 decision made with Trivy evidence, not upfront.
 - **Non-root** `appuser` **from day one:** one-line, never regretted, no downside.
 - **Terraform null provider:** zero cost, zero credentials, CI stays green without AWS. Real resources + Checkov arrive in Phase 3.0.
