@@ -1,6 +1,6 @@
 .PHONY: install test lint docker-build tf-fmt tf-validate all
 install:
-	uv sync 
+	uv sync
 test:
 	uv run pytest
 lint:
