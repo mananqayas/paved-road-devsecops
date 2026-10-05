@@ -1,5 +1,5 @@
 # Dockerfile
-# --- Stage 1: Build the virtual evvironment ---
+# --- Stage 1: Build the virtual environment ---
 FROM python:3.12-slim AS builder
 
 # Install uv inside the builder stage
@@ -12,7 +12,7 @@ WORKDIR /srv/app
 COPY pyproject.toml uv.lock ./
 
 # Install dependency files into a localized .venv folder
-# --frozen ensures uv.local is adhered to exactly without updating it
+# --frozen ensures uv.lock is adhered to exactly without updating it
 RUN uv sync --frozen --no-cache --no-dev
 
 # --- Stage 2: Final minimal production image
