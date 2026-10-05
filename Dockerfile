@@ -29,7 +29,7 @@ COPY app /srv/app/
 # Place the virtual environment's binaries on the system PATH
 ENV PATH="/srv/app/.venv/bin:$PATH"
 
-RUN useradd --create-home --uid 1001 appuser \
+RUN useradd --create-home --uid 10001 appuser \
 	&& chown -R appuser:appuser /srv/app
 USER appuser
 
