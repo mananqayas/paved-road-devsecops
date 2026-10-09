@@ -1,7 +1,6 @@
 # main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="paved-road-sample-api", version="0.1.0")
 class HelloResponse(BaseModel):

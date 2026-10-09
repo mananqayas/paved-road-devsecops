@@ -1,14 +1,13 @@
 """Semgrep rule tests. This file is parsed by Semgrep; it is not executed"""
-from fastapi.responses import HTMLResponse, FileResponse
-
-from sqlalchemy import text, select
 import ctypes
 import pickle
-import yaml
 import subprocess
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends
+
 import requests
+import yaml
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse, HTMLResponse
+from sqlalchemy import select, text
 
 session_router = APIRouter()
 router = APIRouter()
@@ -120,7 +119,7 @@ def test_cwe125_good(data):
 
 def test_cwe78_bad(cmd):
     # ruleid: python.cwe78.os-command-shell-execution
-    return subprocess.run(cmd, shell=True)
+    return subprocess.run(cmd, shell=True, check=True)
 
 def test_cwe78_good(arg):
     # ok: python.cwe78.os-command-shell-execution
