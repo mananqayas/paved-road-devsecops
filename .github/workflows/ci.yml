@@ -57,3 +57,19 @@ jobs:
           uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    sast:
+      name: semgrep
+      runs-on: ubuntu-latest
+      container:
+        image: semgrep/semgrep:latest
+      steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Unit-test the custom Semgrep rules
+        run: semgrep --test semgrep/rules
+      - name: Scan application with strict CWE Top 25 policy
+        run: >-
+          semgrep scan
+          --config semgrep/rules/cwe-top25-rules.yml
+          --metrics=off
+          --json
+          --output semgrep-results.json

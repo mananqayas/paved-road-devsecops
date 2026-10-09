@@ -4,7 +4,14 @@ All notable decisions and changes, newest first. Conventional commits in git; th
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [1.0.0] 2026-10-04
+## [Unreleased]
+
+### Added
+- **Gitleaks CI Integration:** Added CI scans for secrets using gitleaks
+- **Custom Semgrep SAST Framework:** Integrated Semgrep engine targeting the CWE Top 25 matrix.
+- **Deployed CWE Top 25 Rules:** Deployed 25 custom cwe top 25 rules alongside matching test suites.
+
+## [1.0.0] – 2026-10-04
 
 ### Added
 
