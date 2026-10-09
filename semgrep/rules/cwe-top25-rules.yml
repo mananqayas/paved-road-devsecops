@@ -1,0 +1,462 @@
+rules:
+  - id: python.fastapi.cwe79.dynamic-html-response
+    languages: [python]
+    severity: ERROR
+    message: "CWE-79: Dynamic data is being rendered directly with HTMLResponse. Render through an auto-escaping template or escape untrusted values before constructing HTML."
+    metadata:
+      cwe: CWE-79
+      cwe_rank_2025: 1
+      name: Cross-site Scripting
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    patterns:
+      - pattern-either:
+          - pattern: HTMLResponse($X)
+          - pattern: HTMLResponse(content=$X, ...)
+      - pattern-not: HTMLResponse("...")
+      - pattern-not: HTMLResponse(content="...", ...)
+      - pattern-not: HTMLResponse(html.escape(...))
+      - pattern-not: HTMLResponse(content=html.escape(...), ...)
+
+  - id: python.fastapi.cwe89.sql-injection-formatted-query
+    languages: [python]
+    severity: ERROR
+    message: "CWE-89: SQL is built dynamically. Use parameterized SQL / bound parameters rather than f-strings, concatenation, or percentage formatting."
+    metadata:
+      cwe: cwe-89
+      cwe_rank_2025: 2
+      name: SQL Injection
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    patterns:
+      - pattern-either:
+          - pattern: $DB.execute(f"...")
+          - pattern: $DB.execute("..." + $X)
+          - pattern: $DB.execute("..." % $X)
+          - pattern: text(f"...")
+          - pattern: sqlalchemy.text(f"...")
+    
+  - id: python.fastapi.cwe352.session-route-missing-csrf
+    languages: [python]
+    severity: ERROR
+    message: "CWE-352: A state-changing cookie/session route is missing the project's require_csrf dependency"
+    metadata:
+      cwe: CWE-352
+      cwe_rank_2025: 3
+      name: Cross-Site Request Forgery (CSRF)
+      coverage: framework-policy
+      confidence: HIGH
+      policy_tier: blocking
+      convention: "Cookie/session-authenticated state-changing endpoints live on session_router."
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @session_router.$METHOD(...)
+              def $FUNC(...):
+                ...
+          - pattern: |
+              @session_router.$METHOD(...)
+              async def $FUNC(...):
+                ...
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(post|put|patch|delete)$
+      - pattern-not: |
+          @session_router.$METHOD(..., dependencies=[..., Depends(require_csrf), ...], ...)
+          def $FUNC(...):
+            ...
+      - pattern-not: |
+          @session_router.$METHOD(..., dependencies=[..., Depends(require_csrf), ...], ...)
+          async def $FUNC(...):
+            ...
+  - id: python.fastapi.cwe862.admin-route-missing-authorization
+    languages: [python]
+    severity: ERROR
+    message: "CWE-862: An admin route is missing require_admin authorization, Authentication alone is not sufficient."
+    metadata:
+      cwe: 862
+      cwe_rank_2025: 4
+      name: Missing authorization
+      confidence: HIGH
+      coverage: framework-policy
+      policy_tier: blocking
+      convention: "Privileged administrative endpoints live on admin_router."
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @admin_router.$METHOD(...)
+              def $FUNC(...):
+                ...
+          - pattern: |
+              @admin_router.$METHOD(...)
+              async def $FUNC(...):
+               ...
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(get|post|put|patch|delete)$
+      - pattern-not: |
+          @admin_router.$METHOD(..., dependencies=[..., Depends(require_admin), ...], ...)
+          def $FUNC(...):
+            ...
+      - pattern-not: |
+          @admin_router.$METHOD(..., dependencies=[..., Depends(require_admin), ...], ...)
+          async def $FUNC(...):
+            ...
+  - id: python.native.cwe787.raw-memory-write
+    languages: [python]
+    severity: ERROR
+    message: "CWE-787: Raw-memory write through ctypes.memset is forbidden in this Python API. Move native memory handling to a reviewed memory-safe/native component."
+    metadata:
+      cwe: CWE-787
+      cwe_rank_2025: 5
+      name: Out-of-bounds Write
+      coverage: native-boundary-proxy
+      confidence: HIGH
+      policy_tier: blocking
+    pattern: ctypes.memset(...)
+  - id: python.fastapi.cwe22.dynamic-file-response
+    languages: [python]
+    severity: ERROR
+    message: "CWE-22: FileResponse is using a dynamic path. Resolve through the approved safe_path() helper, which canoncalizes and enforces an allowed root."
+    metadata:
+      cwe: CWE-22
+      cwe_rank_2025: 6
+      name: Path Traversal
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    patterns:
+      - pattern: FileResponse($PATH)
+      - pattern-not: FileResponse("...")
+      - pattern-not: FileResponse(safe_path(...))
+  - id: python.native.cwe416.use-after-free-pointer-index
+    languages: [python]
+    severity: ERROR
+    message: "CWE-416: Pointer os ised after a native free(). This is a use-after-use hazard at the Python/native boundary."
+    metadata:
+      cwe: CWE-416
+      cwe_rank_2025: 7
+      name: Use After Free
+      coverage: native-boundary-direct-pattern
+      confidence: HIGH
+      policy_tier: blocking
+    pattern: |
+      $LIB.free($PTR)
+      ...
+      $PTR[$INDEX]
+  - id: python.native.cwe125.raw-memory-read
+    languages: [python]
+    severity: ERROR
+    message: "CWE-125: Raw pointer read through ctypes.string_at is forbidden in this Python API because bounds/lifetime cannot be reliably proven HTMLResponse."
+    metadata:
+      cwe: CWE-125
+      cwe_rank_2025: 8
+      name: Out-of-bounds read
+      confidence: HIGH
+      coverage: native-boundary-proxy
+      policy_tier: blocking
+    pattern: ctypes.string_at(...)
+
+  - id: python.cwe78.os-command-shell-execution
+    languages: [python]
+    severity: ERROR
+    message: "CWE-78: Shell execution is enabled. Use an argv list, shell=False, fixed executable paths, and allowlisted arguments."
+    metadata:
+      cwe: CWE-78
+      cwe_rank_2025: 9
+      name: OS Command Injection
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: os.system(...)
+      - pattern: subprocess.run(..., shell=True, ...)
+      - pattern: subprocess.call(..., shell=True, ...)
+      - pattern: subprocess.Popen(..., shell=True, ...)
+      - pattern: subprocess.check_output(..., shell=True, ...)
+      - pattern: subprocess.check_call(..., shell=True, ...)
+  - id: python.cwe94.dynamic-code-execution
+    languages: [python]
+    severity: ERROR
+    message: "CWE-94: Dynamic code execution is forbidden in the API runtime. Replace eval/exec/complie of dynamic content with explicit parsing/dispatch."
+    metadata:
+      cwe: CWE-94
+      cwe_rank_2025: 10
+      name: Code Injection
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+      - pattern: compile(...)
+  - id: python.native.cwe120.unbounded-native-string-copy
+    languages: [python]
+    severity: ERROR
+    message: "CWE-120: Unbounded native string-copy primitive detected. strcpy/strcat are prohibited at the Python/native boundary."
+    metadata:
+      cwe: CWE-120
+      cwe_rank_2025: 11
+      name: Classic Buffer Overflow
+      coverage: native-boundary-proxy
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: $LIB.strcpy(...)
+      - pattern: $LIB.strcat(...)
+  - id: python.fastapi.cwe434.persist-upload-original-filename
+    languages: [python]
+    severity: ERROR
+    message: "CWE-434: Upload is persisted using the client-controlled original filename. Generate a server-side filename and enforce extension/content/type/size policy before persistence."
+    metadata:
+      cwe: CWE-434
+      cwe_rank_2025: 12
+      name: Unrestricted Upload of File with Dangerous Type
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: open($UPLOAD.filename, ...)
+      - pattern: $PATH.open($UPLOAD.filename, ...)
+  - id: python.cwe476.dict-get-none-dereference
+    languages: [python]
+    severity: ERROR
+    message: "CWE-476: dict.get() can return None and is dereferenced immediately. Provide a non-None default or validate before use."
+    metadata:
+      cwe: CWE-476
+      cwe_rank_2025: 13
+      name: NULL Pointer Dereference
+      coverage: python-none-dereference-proxy
+      confidence: HIGH
+      policy_tier: blocking
+    pattern: $DICT.get($KEY).$METHOD(...)
+  - id: python.native.cwe121.unbounded-native-format
+    languages: [python]
+    severity: ERROR
+    message: "CWE-121: Unbounded native formatting primitive (sprintf/vsprintf) detected. Use a bounded/memory-safe interface."
+    metadata:
+      cwe: CWE-121
+      cwe_rank_2025: 14
+      name: Stack-based Buffer Overflow
+      coverage: native-boundary-proxy
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: $LIB.sprintf(...)
+      - pattern: $LIB.vsprintf(...)
+  - id: python.cwe502.unsafe-deserialization
+    languages: [python]
+    severity: ERROR
+    message: "CWE-502: Unsafe deserialization can execute attacker-controlled behavior. Do not deserialize untrusted pickle/marsal data; use safe structed formats and schemas."
+    metadata:
+      cwe: CWE-502
+      cwe_rank_2025: 15
+      name: Deserialization of Untrusted Data
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: pickle.load(...)
+      - pattern: pickle.loads(...)
+      - pattern: marshal.load(...)
+      - pattern: marshal.loads(...)
+      - pattern: yaml.load(...)
+  - id: python.native.cwe122.raw-heap-resize
+    languages: [python]
+    severity: ERROR
+    message: "CWE-122: Raw heap resize/allocation primitive detected at the Python/native boundary. Keep heap management out of the API process or isolate it behind reviewed native code."
+    metadata:
+      cwe: CWE-122
+      cwe_rank_2025: 16
+      name: Heap-based Buffer Overflow
+      coverage: native-boundary-proxy
+      confidence: MEDIUM
+      policy_tier: blocking
+    pattern-either:
+      - pattern: ctypes.resize(...)
+      - pattern: $LIB.realloc(...)
+  - id: python.fastapi.cwe863.user-controlled-role-authorization
+    languages: [python]
+    severity: ERROR
+    message: "CWE-863: Authorization decision trusts a role supplied by the request. Resolve identity/roles from trusted server-side claims and authorization policy."
+    metadata:
+      cwe: CWE-863
+      cwe_rank_2025: 17
+      name: Incorrect Authorization
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: '$REQ.headers.get("X-Role") == "admin"'
+      - pattern: '"admin" == $REQ.headers.get("X-Role")'
+      - pattern: '$REQ.query_params.get("role") == "admin"'
+      - pattern: '"admin" == $REQ.query_params.get("role") '
+  - id: python.fastapi.cwe20.raw-dict-request-body
+    languages: [python]
+    severity: ERROR
+    message: "CWE-20: State-changing API accepts an unstructed dict body. Use a Pydantic model with field types, bounds, enums, and validators."
+    metadata:
+      cwe: CWE-20
+      cwe_rank_2025: 18
+      name: Improper Input Validation
+      confidence: HIGH
+      coverage: framework-policy
+      policy_tier: blocking
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$ROUTER.$METHOD(...)
+              def $FUNC(..., $BODY: $TYPE, ...):
+                ...
+          - pattern: |
+              @$ROUTER.$METHOD(...)
+              async def $FUNC(..., $BODY: $TYPE, ...):
+                ...
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(post|put|patch)$
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: '^(dict(?:\[.*\])?|Dict\[.*\]|Any|typing\.Any)$'
+  - id: python.fastapi.cwe284.internal-route-missing-access-control
+    languages: [python]
+    severity: ERROR
+    message: "CWE-284: Internal route is missing the require_internal access control dependency."
+    metadata:
+      cwe: CWE-284
+      cwe_rank_2025: 19
+      name: Improper Access Control
+      coverage: framework-policy
+      confidence: HIGH
+      policy_tier: blocking
+      convention: "Internal service endpoints live on internal_router."
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @internal_router.$METHOD(...)
+              def $FUNC(...):
+                ...
+          - pattern: |
+              @internal_router.$METHOD(...)
+              def $FUNC(...):
+                ...
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(get|post|put|patch|delete)$
+      - pattern-not: |
+          @internal_router.$METHOD(..., dependencies=[..., Depends(require_internal), ...], ...)
+          def $FUNC(...):
+            ...
+      - pattern-not: |
+          @internal_router.$METHOD(..., dependencies=[..., Depends(require_internal), ...], ...)
+          async def $FUNC(...):
+            ...
+  - id: python.fastapi.cwe200.exception-detail-response
+    languages: [python]
+    severity: ERROR
+    message: "CWE-200: Internal exception details are exposed to the client. Return a stable public error code/message and log internal details server-side."
+    metadata:
+      cwe: CWE-200
+      cwe_rank_2025: 20
+      name: Exposure of Sensitive Information to an Unauthorized Actor
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: HTTPException(..., detail=str($ERR), ...)
+      - pattern: 'JSONResponse(..., content={..., "error": str($ERR), ...}, ...)'
+      - pattern: 'return {"error": str($ERR)}'
+  - id: python.fastapi.cwe306.ops-route-missing-authentication
+    languages: [python]
+    severity: ERROR
+    message: "CWE-306: Critical operational endpoint is missing require_authenticated_user."
+    metadata:
+      cwe: CWE-306
+      cwe_rank_2025: 21
+      name: Missing Authentication for Critical Function
+      coverage: framework-policy
+      confidence: HIGH
+      policy_tier: blocking
+      convention: "Operational/critical endpoints live on ops_router"
+    patterns:
+      - pattern-either: 
+          - pattern: |
+              @ops_router.$METHOD(...)
+              def $FUNC(...):
+                ...
+          - pattern: |
+              @ops_router.$METHOD(...)
+              async def $FUNC(...):
+                ...
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(get|post|put|patch|delete)$
+      - pattern-not: |
+          @ops_router.$METHOD(..., dependencies=[..., Depends(require_authenticated_user), ...], ...)
+          def $FUNC(...):
+            ...
+      - pattern-not: |
+          @ops_router.$METHOD(..., dependencies=[..., Depends(require_authenticated_user), ...], ...)
+          async def $FUNC(...):
+            ...
+  - id: python.fastapi.cwe918.direct-request-url-to-http-client
+    languages: [python]
+    severity: ERROR
+    message: "CWE-918: Request-controlled URL flows directly to an outbound HTTP client. Validate scheme/host/port, resolve DNS safely, and enforce an egress allowlist."
+    metadata:
+      cwe: CWE-918
+      cwe_rank_2025: 22
+      name: Server-Side Request Forgery (SSRF)
+      coverage: direct-dataflow-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: requests.get($REQ.query_params.get(...), ...)
+      - pattern: requests.post($REQ.query_params.get(...), ...)
+      - pattern: httpx.get($REQ.query_params.get(...), ...)
+      - pattern: httpx.post($REQ.query_params.get(...), ...)
+      - pattern: $CLIENT.get($REQ.query_params.get(...), ...)
+      - pattern: $CLIENT.post($REQ.query_params.get(...), ...)
+  - id: python.fastapi.cwe77.user-controlled-executable
+    languages: [python]
+    severity: ERROR
+    message: "CWE-77: User-controlled data selects the executable/command. Executable identity must be fixed or allowlisted; validate each argument separately."
+    metadata:
+      cwe: CWE-77
+      cwe_rank_2025: 23
+      name: Command Injection
+      coverage: direct-dataflow-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern-either:
+      - pattern: subprocess.run([$REQ.query_params.get(...), ...], ...)
+      - pattern: subprocess.Popen([$REQ.query_params.get(...), ...], ...)
+      - pattern: subprocess.call([$REQ.query_params.get(...), ...], ...)
+  - id: python.fastapi.cwe639.direct-primary-key-lookup
+    languages: [python]
+    severity: ERROR
+    message: "CWE-639: Direct primary-key lookup in an HTTP handler can become IDOR/BOLA. Use an ownership/tenant-scoped query or the approved get_owned_resource() helper."
+    metadata:
+      cwe: CWE-639
+      cwe_rank_2025: 24
+      name: Authorization Bypass Through User-Controlled Key
+      coverage: MEDIUM
+      policy_tier: blocking
+      convention: "HTTP handlers do not call Session.get(); resource fetches must be ownership/tenant scoped."
+    patterns:
+      - pattern: $SESSION.get($MODEL, $ID)
+      - pattern-not: $SESSION.get("$STR", ...)
+  - id: python.fastapi.cwe770.unbounded-upload-read
+    languages: [python]
+    severity: ERROR
+    message: "CWE-770: Upload/body is read without a bound. Stream in bounded chunks and enforce request/upload size and rate limits."
+    metadata:
+      cwe: CWE-770
+      cwe_rank_2025: 25
+      name: Allocation of Resources Without Limits or Throttling
+      coverage: direct-guardrail
+      confidence: HIGH
+      policy_tier: blocking
+    pattern: await $UPLOAD.read()
