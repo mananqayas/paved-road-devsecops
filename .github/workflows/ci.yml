@@ -73,5 +73,3 @@ jobs:
           --metrics=off
           --json
           --output semgrep-results.json
-          
-
