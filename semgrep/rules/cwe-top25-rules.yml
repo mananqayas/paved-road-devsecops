@@ -134,7 +134,7 @@ rules:
   - id: python.native.cwe416.use-after-free-pointer-index
     languages: [python]
     severity: ERROR
-    message: "CWE-416: Pointer os ised after a native free(). This is a use-after-use hazard at the Python/native boundary."
+    message: "CWE-416: Pointer os is used after a native free(). This is a use-after-free hazard at the Python/native boundary."
     metadata:
       cwe: CWE-416
       cwe_rank_2025: 7
@@ -180,7 +180,7 @@ rules:
   - id: python.cwe94.dynamic-code-execution
     languages: [python]
     severity: ERROR
-    message: "CWE-94: Dynamic code execution is forbidden in the API runtime. Replace eval/exec/complie of dynamic content with explicit parsing/dispatch."
+    message: "CWE-94: Dynamic code execution is forbidden in the API runtime. Replace eval/exec/compile of dynamic content with explicit parsing/dispatch."
     metadata:
       cwe: CWE-94
       cwe_rank_2025: 10
@@ -249,7 +249,7 @@ rules:
   - id: python.cwe502.unsafe-deserialization
     languages: [python]
     severity: ERROR
-    message: "CWE-502: Unsafe deserialization can execute attacker-controlled behavior. Do not deserialize untrusted pickle/marsal data; use safe structed formats and schemas."
+    message: "CWE-502: Unsafe deserialization can execute attacker-controlled behavior. Do not deserialize untrusted pickle/marshal data; use safe structured formats and schemas."
     metadata:
       cwe: CWE-502
       cwe_rank_2025: 15
@@ -296,7 +296,7 @@ rules:
   - id: python.fastapi.cwe20.raw-dict-request-body
     languages: [python]
     severity: ERROR
-    message: "CWE-20: State-changing API accepts an unstructed dict body. Use a Pydantic model with field types, bounds, enums, and validators."
+    message: "CWE-20: State-changing API accepts an unstructured dict body. Use a Pydantic model with field types, bounds, enums, and validators."
     metadata:
       cwe: CWE-20
       cwe_rank_2025: 18

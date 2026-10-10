@@ -12,5 +12,11 @@ tf-fmt:
 tf-validate:
 	terraform -chdir=terraform init -backend=false -input=false
 	terraform -chdir=terraform validate
-all: install test lint
+gitleaks:
+	gitleaks git
+semgrep-sast-test:
+	semgrep --test semgrep/rules
+semgrep-sast-scan:
+	semgrep scan --config semgrep/rules/cwe-top25-rules.yml app
+all: install test lint gitleaks semgrep-sast-test semgrep-sast-scan
 	@echo "Phase 1.0 local checks passed."
