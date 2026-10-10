@@ -72,6 +72,6 @@ jobs:
           --config semgrep/rules/cwe-top25-rules.yml
           --metrics=off
           --json
-          --output semgrep-results.json
           --error
           app
+          --text
