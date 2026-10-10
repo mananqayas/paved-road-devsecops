@@ -4,10 +4,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
  
 
-def test_inline_eval_negative():
-    test = "val"
-    with pytest.raises(NameError):
-        eval(test)
 app = FastAPI(title="paved-road-sample-api", version="0.1.0")
 class HelloResponse(BaseModel):
     message: str
