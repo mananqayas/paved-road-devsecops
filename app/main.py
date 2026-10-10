@@ -2,7 +2,7 @@
 import pytest
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+ 
 
 def test_inline_eval_negative():
     test = "val"
