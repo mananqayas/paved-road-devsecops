@@ -22,7 +22,7 @@ jobs:
           run: uv sync --locked --dev
         # Linting the code using ruff by astral
         - name: Lint
-          run: uv run ruff check .
+          run: uv run ruff check --fix .
         # Running the tests inside tests directory using pytest library
         - name: Run tests
           run: uv run pytest -q
@@ -73,4 +73,5 @@ jobs:
           --metrics=off
           --json
           --output semgrep-results.json
+          --error
           app
