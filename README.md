@@ -79,7 +79,7 @@ semgrep scan \
     --output semgrep-results.json
 ```
 ```bash
-make all    # install + pytest + compile check (no docker/terraform needed)
+make all    # install + pytest + compile check (no docker/terraform needed) + gitleaks + semgrep-sast-test + semgrep-sast-scan
 ```
 
 Full local parity (needs docker + terraform)
@@ -218,7 +218,12 @@ Ran 25 rules on 1 file: 0 finding
 ```
 **PR blocked on gitleaks**
 
-![Image](./docs/images/pr_blocked_on_aws_secret_detection.png)
+![Gitleaks PR block](./docs/images/pr_blocked_on_aws_secret_detection.png)
+
+**PR blocked for insecure and critically vulnerable code**
+
+![SAST PR block](./docs/images/pr_blocked_on_insecure_code_sast.png)
+
 ## Trade-offs
 
 - **FastAPI over Flask:** better for my Python background and for writing meaningful Semgrep custom rules later (typed endpoints).
