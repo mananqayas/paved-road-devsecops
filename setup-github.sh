@@ -58,6 +58,9 @@ gh api --method POST "/repos/${OWNER}/${REPO_NAME}/rulesets" -H "Accept: applica
           {
             "context": "gitleaks"
           },
+          {
+            "context": "semgrep"
+          }
         ]
       }
     }
