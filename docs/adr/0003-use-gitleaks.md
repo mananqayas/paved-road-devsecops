@@ -9,7 +9,7 @@ Engineering teams develop application code that require sensitive credentials, i
 
 Currently, there is a risk of developers accidentally hardcoding these credentials into source files and pushing them to remote repositories. This exposure introduces severe security vulnerabilities and increases the risk of data breaches.
 
-To mitigate this, we require a mechanism that detects and prevents secrets from being exposed both at the local dev level (before the code is commited) and at the central level (during Continuous Integration pipelines).
+To mitigate this, we require a mechanism that detects and prevents secrets from being exposed both at the local dev level (before the code is committed) and at the central level (during Continuous Integration pipelines).
 
 ## Decision
 We will adopt **Gitleaks** as this project's standard secret scanning solution. To ensure full coverage, we will implement it at two critical guardrails:
@@ -34,7 +34,7 @@ We will adopt **Gitleaks** as this project's standard secret scanning solution. 
 ### Option 3: Yelp/detect-secrets
 
 - **Overview:** A popular Python-based pattern and entropy scanner that maps existing technical debt using a dedicated baseline file.
-- **Why it was rejected:** Written in Python, it requires installing a specific runtime ecosystem across all developer machines to execute local pre-commit hooks. Gitleaks, being written in Go, compiles to a single native binary, which offers **superior execution speed** and zero local environment dependency overhead.j:
+- **Why it was rejected:** Written in Python, it requires installing a specific runtime ecosystem across all developer machines to execute local pre-commit hooks. Gitleaks, being written in Go, compiles to a single native binary, which offers **superior execution speed** and zero local environment dependency overhead:
 
 ## Consequences
 - **Positive:** It is open-source, highly performant (written in Go), and easily runs offline in local hooks.
