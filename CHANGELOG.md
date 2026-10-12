@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Gitleaks CI Integration:** Added CI scans for secrets using gitleaks
 - **Custom Semgrep SAST Framework:** Integrated Semgrep engine targeting the CWE Top 25 matrix.
 - **Deployed CWE Top 25 Rules:** Deployed 25 custom cwe top 25 rules alongside matching test suites.
+- **ADRs 0003/0004 for Gitleaks and Semgrep.**
 
 ## [1.0.0] – 2026-10-04
 

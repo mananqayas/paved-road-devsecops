@@ -1,4 +1,4 @@
- ADR-0003: Use Gitleaks (secrets scanning) and Semgrep (SAST) for the paved-road-pipeline
+# ADR-0003: Use Gitleaks (secrets scanning) for the paved-road-pipeline
 Date: 2026-10-10
 
 Status: Accepted
@@ -7,7 +7,7 @@ Status: Accepted
 
 Engineering teams develop application code that require sensitive credentials, including API keys, database passwords, and authentication tokens.
 
-Currently, there is a risk of developers accidently hardcoding these credentials into source files and pushing them to remote repositories. This exposure introduces severe security vulnerabilities and increases the risk of data breaches.
+Currently, there is a risk of developers accidentally hardcoding these credentials into source files and pushing them to remote repositories. This exposure introduces severe security vulnerabilities and increases the risk of data breaches.
 
 To mitigate this, we require a mechanism that detects and prevents secrets from being exposed both at the local dev level (before the code is commited) and at the central level (during Continuous Integration pipelines).
 
@@ -16,14 +16,14 @@ We will adopt **Gitleaks** as this project's standard secret scanning solution. 
 
 + **Local Prevention (Shift-Left)**: We will mandate the user for **pre-commit** hooks using the framework/pre-commit ecosystem to run Gitleaks locally on every developer's machine before code can be committed.
 + **Central Detection (CI Pipeline)**: We will integrate the **Gitleaks GitHub Action** (or GitLab CI template) into our base Continuous Integration pipeline to scan all incoming Pull Requests / Merge Requests.
-+ **Enforecment:** CI pipeline scans will be configured as **blocking checks.** Any pipeline that detects a secret will fail, preventing the code from being merged until the secret is remediated.
++ **Enforcement:** CI pipeline scans will be configured as **blocking checks.** Any pipeline that detects a secret will fail, preventing the code from being merged until the secret is remediated.
 
 ## Alternative considerations
 
 ### Option 1: TruffleHog (Open Source)
 - **Overview:** A highly capable open-source secrets scanner that focuses heavily on **active validation** (verifying if a flagged key is actually live by making an outbound API call).
 
-- **Why it was rejected:** TruffleHog is exceptionlly powerful for scheduled historical repo audits and security incident response. However, because its signature feature requires making live networking calls to verify secrets, it can introduce significant latency or provider rate-limiting. For an **immediate pre-commit hook**, we require a lightning-fast, lightweight, and fully offline tool so developer workflows are not disrupted.
+- **Why it was rejected:** TruffleHog is exceptionally powerful for scheduled historical repo audits and security incident response. However, because its signature feature requires making live networking calls to verify secrets, it can introduce significant latency or provider rate-limiting. For an **immediate pre-commit hook**, we require a lightning-fast, lightweight, and fully offline tool so developer workflows are not disrupted.
 
 - **Future Consideration:**  We may layer TruffleHog into our security stack in the future for scheduled weekly full-history sweeps.
 
