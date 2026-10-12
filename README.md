@@ -1,7 +1,7 @@
 # Paved-Road DevSecOps Pipeline
 A reusable, opinionated CI/CD pipeline ("paved road") that any service team can adopt.
 
-Security is built into the road, not bolted on: every PR gets secret scanning, SAST, IaC scanning, image scanning, keyless signing, and SBOM attestation with policy gates that fail the build on severity thresholds.
+Security is built into the road, not bolted on: every PR gets secret scanning,and SAST gates until Phase 2 of this project. 
 
 ## Problem
 
@@ -41,10 +41,10 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 ## Threat model
 | Threat | Phase 2.0 posture | Paved-road mitigation (later phases) |
 | --- | --- | --- |
-| Secret commited to git | Blocked at PR | Gitleaks CI, blocks PR|
-| Vulnerable app code merged | SAST `CRITICAL VULN` blocks at PR | Semgrep SAST + 25 custom rules, blocks PR |
+| Secret committed to git | Blocked at PR | Gitleaks CI, blocks PR|
+| Vulnerable app code merged | SAST fails on any ```ERROR``` finding at PR | Semgrep SAST + 25 custom rules, blocks PR |
 | Insecure infra merged | `fmt`/`validate` only | Checkov IaC scan, blocks on HIGH/CRITICAL (3.0) |
-| CVE in base image / deps | No scanning | Trivy  |
+| CVE in base image / deps | No scanning | Trivy |
 | Tampered image deployed | Unsigned | Cosign keyless (OIDC) signing, `verify.sh` (4.0) |
 | Unknown what's inside image | No inventory | SBOM per image, attached as attestation (4.0) |
 
@@ -61,7 +61,7 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 
 - gitleaks ci job
 - SAST ci job + CWE Top 25 Application Security Vulnerabilities Custom Rules using Semgrep
-- Semgrep rules cover OWASP Top 10 security vulnerabilites like XSS, SQLi, CSRF, Missing Authorization etc
+- Semgrep rules cover OWASP Top 10 security vulnerabilities like XSS, SQLi, CSRF, Missing Authorization etc
 
 ## Reproduce in one command
 
@@ -236,8 +236,8 @@ Ran 25 rules on 1 file: 0 finding
 | --- | --- | --- |
 | CI runs tests on every change (1.0) | PR.PS-1 (baseline config) | CC7.2 (monitoring) |
 | Branch protection, required reviews (1.0) | PR.AC-4 (access permissions) | CC6.1 (logical access) |
-| Secret scanning (2.0, planned) | PR.DS-1 (data-at-rest protection) | CC6.7 (encryption/keys) |
-| SAST/IaC/image gates (2.0-3.0, planned) | DE.CM-8 (vuln scanning)  | CC7.1 (vuln mgmt) |
+| Secret scanning (2.0) | PR.DS-1 (data-at-rest protection) | CC6.7 (encryption/keys) |
+| SAST (2.0) built, IaC/image (3.0) planned | DE.CM-8 (vuln scanning)  | CC7.1 (vuln mgmt) |
 | Image signing + SBOM (4.0, planned) | PR.DS-6 (integrity checking) |  CC7.2   |
 
 ## Cost
