@@ -18,5 +18,11 @@ semgrep-sast-test:
 	semgrep --test semgrep/rules
 semgrep-sast-scan:
 	semgrep scan --config semgrep/rules/cwe-top25-rules.yml app
+checkov-iac-scan:
+	checkov -d terraform/
+trivy-dockerfile-scan:
+	trivy config --severity HIGH,CRITICAL Dockerfile
+trivy-image-scan:
+	trivy image python-api:latest
 all: install test lint gitleaks semgrep-sast-test semgrep-sast-scan
 	@echo "Phase 1.0 local checks passed."

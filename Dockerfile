@@ -1,6 +1,6 @@
 # Dockerfile
 # --- Stage 1: Build the virtual environment ---
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b AS builder
 
 # Install uv inside the builder stage
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
