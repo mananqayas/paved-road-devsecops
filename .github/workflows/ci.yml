@@ -84,7 +84,7 @@ jobs:
       steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@99bb2caf247dfd9f03cf984373bc6043d4e32eb
+        uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform
           quiet: true
