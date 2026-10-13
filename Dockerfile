@@ -1,7 +1,7 @@
 # Dockerfile
 # --- Stage 1: Build the virtual environment ---
-# FROM python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS builder
-FROM node:18.12.0-buster AS builder
+FROM python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS builder
+#FROM node:18.12.0-buster AS builder
 # Install uv inside the builder stage
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -16,8 +16,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache --no-dev
 
 # --- Stage 2: Final minimal production image
-FROM node:18.12.0-buster AS runner
-# FROM python:3.12-slim AS runner
+# FROM node:18.12.0-buster AS runner
+FROM python:3.12-slim AS runner
 
 WORKDIR /srv/app
 
@@ -32,8 +32,8 @@ ENV PATH="/srv/app/.venv/bin:$PATH"
 
 RUN useradd --create-home --uid 10001 appuser \
 	&& chown -R appuser:appuser /srv/app
-#USER appuser
-USER root
+USER appuser
+#USER root
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
