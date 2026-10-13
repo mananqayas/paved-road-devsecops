@@ -32,7 +32,8 @@ ENV PATH="/srv/app/.venv/bin:$PATH"
 
 RUN useradd --create-home --uid 10001 appuser \
 	&& chown -R appuser:appuser /srv/app
-USER appuser
+#USER appuser
+USER root
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
