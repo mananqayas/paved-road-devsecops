@@ -60,7 +60,17 @@ gh api --method POST "/repos/${OWNER}/${REPO_NAME}/rulesets" -H "Accept: applica
           },
           {
             "context": "semgrep"
+          },
+          {
+            "context": "iac-scan"
+          },
+          {
+            "context": "docker-file-scan"
+          },
+          {
+            "context": "docker-image-scan"
           }
+
         ]
       }
     }
