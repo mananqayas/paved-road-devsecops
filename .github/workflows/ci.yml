@@ -74,7 +74,7 @@ jobs:
           --json
           --error
           app
-          --text
+        --text
     iac-scan:
       name: iac-scan
       runs-on: ubuntu-latest
@@ -87,6 +87,7 @@ jobs:
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform
+          framework: terraform
           quiet: true
           output_format: sarif
           output_file_path: iac-results.sarif
@@ -95,4 +96,28 @@ jobs:
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
+    docker-file-scan:
+      name: docker-file-scan
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Run Trivy vulnerability scanner in config mode
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: 1
+    docker-image-scan:
+      name: docker-image-scan
+      runs-on: ubuntu-latest
+      needs: docker
+      steps:
+        - uses:
+        - name: Run Trivy vulnerability scanner in image mode
+          uses: acquasecurity/trivy-action@v0.36.0
+          with:
+            scan-type: 'image'
+            image-ref: paved-road-sample-api:${{github.sha}
+            severity: 'CRITICAL,HIGH'
 
