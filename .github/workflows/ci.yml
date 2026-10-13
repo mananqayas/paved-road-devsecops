@@ -118,6 +118,6 @@ jobs:
           uses: acquasecurity/trivy-action@v0.36.0
           with:
             scan-type: 'image'
-            image-ref: paved-road-sample-api:${{github.sha}
+            image-ref: paved-road-sample-api:${{github.sha}}
             severity: 'CRITICAL,HIGH'
 
