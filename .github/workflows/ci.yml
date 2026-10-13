@@ -84,12 +84,14 @@ jobs:
       steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@v2
+        uses: bridgecrewio/checkov-action@99bb2caf247dfd9f03cf984373bc6043d4e32eb
         with:
           directory: terraform
           quiet: true
+          output_format: sarif
+          output_file_path: iac-results.sarif
       - name: Upload SARIF File
-        uses: github/codeql-action/upload-serif@66e692051da0915b214c5158091a226015d453f4
+        uses: github/codeql-action/upload-sarif@v2
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
