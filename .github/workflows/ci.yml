@@ -90,12 +90,12 @@ jobs:
           framework: terraform
           quiet: true
           output_format: sarif
-          output_file_path: iac-results.sarif
+          output_file_path: reports
           soft_fail: true
       - name: Upload SARIF File
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
         with:
-          sarif_file: iac-results.sarif
+          sarif_file: reports/results.sarif
     docker-file-scan:
       name: docker-file-scan
       runs-on: ubuntu-24.04
