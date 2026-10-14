@@ -1,7 +1,7 @@
 # Dockerfile
 # --- Stage 1: Build the virtual environment ---
-FROM python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS builder
-
+# FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS builder
+FROM python:3.12-slim-trixie AS builder
 # Install uv inside the builder stage
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -13,12 +13,19 @@ COPY pyproject.toml uv.lock ./
 
 # Install dependency files into a localized .venv folder
 # --frozen ensures uv.lock is adhered to exactly without updating it
-RUN uv sync --frozen --no-cache --no-dev
+RUN uv sync --frozen --no-cache --no-dev --no-install-project --no-editable
 
 # --- Stage 2: Final minimal production image
-FROM python:3.12-slim AS runner
+# FROM node:18.12.0-buster AS runner
+
+# FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS runner
+
+FROM python:3.12-slim-trixie AS runner
 
 WORKDIR /srv/app
+
+# Force-upgrade existing OS packages to drop Trivy vulnerabilites down to 0
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Copy the pre-built virtual environment from the builder stage
 COPY --from=builder /srv/app/.venv /srv/app/.venv
@@ -36,5 +43,4 @@ USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 	CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')" || exit 1
-
-CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/srv/app/.venv/bin/python", "-m", "fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]
