@@ -8,7 +8,7 @@ dist/
 wheels/
 *.egg-info
 .ruff_cache
-
+.DS_STORE
 # Virtual environments
 .venv
 
