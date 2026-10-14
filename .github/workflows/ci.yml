@@ -92,7 +92,7 @@ jobs:
           output_format: sarif
           output_file_path: iac-results.sarif
       - name: Upload SARIF File
-        uses: aquasecurity/trivy-action@v0.36.0 
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
