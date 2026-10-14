@@ -108,7 +108,7 @@ jobs:
           uses: aquasecurity/trivy-action@v0.36.0
           with:
             scan-type: 'config'
-            scan-ref: '.'
+            scan-ref: './Dockerfile'
             severity: 'CRITICAL,HIGH'
             format: 'sarif'
             output: 'trivy-results-docker-file.sarif'
