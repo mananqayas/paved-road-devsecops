@@ -130,18 +130,26 @@ jobs:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Build docker image
           run: docker buildx build --load -t paved-road-sample-api:${{github.sha}} .
-        - name: Run Trivy vulnerability scanner in image mode
+          # Generate the full SARIF report without breaking the build
+        - name: Generate SARIF Security Report 
           uses: aquasecurity/trivy-action@v0.36.0
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
-            severity: 'CRITICAL,HIGH'
-            ignore-unfixed: true
             format: 'sarif'
             output: 'trivy-results-docker-image.sarif'
+            exit-code: 0
+        - name: Evaluate Security Gate 
+          uses: aquasecurity/trivy-action@v0.36.0
+          with:
+            scan-type: 'image'
+            image-ref: paved-road-sample-api:${{github.sha}}
+            format: 'table'
+            severity: 'CRITICAL,HIGH'
+            ignore-unfixed: true
             exit-code: 1
         - name: Upload SARIF
           uses: github/codeql-action/upload-sarif@v3
-          if: success() || failure()
+          if: always() # Ensures the report uploads even if the Gatekeeper step fails
           with:
             sarif_file: 'trivy-results-docker-image.sarif'
