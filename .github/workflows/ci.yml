@@ -99,6 +99,9 @@ jobs:
     docker-file-scan:
       name: docker-file-scan
       runs-on: ubuntu-latest
+      permissions:
+        contents: read
+        security-events: write
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Run Trivy vulnerability scanner in config mode
@@ -107,10 +110,21 @@ jobs:
             scan-type: 'config'
             scan-ref: '.'
             severity: 'CRITICAL,HIGH'
+            format: 'sarif'
+            ouput: 'trivy-results-docker-file.sarif'
             exit-code: 1
+        - name: Upload SARIF
+          uses: github/codeql-action/upload-sarif@v2
+          if: success() || failure()
+          with:
+            sarif_file: 'trivy-results-docker-file.sarif'
+
     docker-image-scan:
       name: docker-image-scan
       runs-on: ubuntu-latest
+      permissions:
+        contents: read
+        security-events: write
       needs: docker
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -123,5 +137,11 @@ jobs:
             image-ref: paved-road-sample-api:${{github.sha}}
             severity: 'CRITICAL,HIGH'
             ignore-unfixed: true
+            format: 'sarif'
+            output: 'trivy-results-docker-image.sarif'
             exit-code: 1
-
+        - name: Upload SARIF
+          uses: github/codeql-action/upload-sarif@v2
+          if: success() || failure()
+          with:
+            sarif_file: 'trivy-results-docker-image.sarif'
