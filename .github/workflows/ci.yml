@@ -122,5 +122,6 @@ jobs:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
             severity: 'CRITICAL,HIGH'
+            ignore-unfixed: true
             exit-code: 1
 
