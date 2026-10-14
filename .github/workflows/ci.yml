@@ -132,6 +132,7 @@ jobs:
           run: docker buildx build --load -t paved-road-sample-api:${{github.sha}} .
           # Generate the full SARIF report without breaking the build
         - name: Generate SARIF Security Report 
+          uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
