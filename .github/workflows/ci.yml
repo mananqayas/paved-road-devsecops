@@ -5,7 +5,7 @@ on:
 jobs:
     python:
         # Runner
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         # Steps to be run in the runner
         steps:
           # Ubuntu latest VM clones code
@@ -13,7 +13,7 @@ jobs:
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
           # uv and uvx are installed using astral-sh/setup-uv Github action
         - name: Install uv and Python
-          uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+          uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
           with:
             version: "0.12.21"
             python-version: "3.12"
@@ -28,7 +28,7 @@ jobs:
           run: uv run pytest -q
     docker:
         needs: python
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         steps:
         - name: Checkout code
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -36,7 +36,7 @@ jobs:
         - name: Build docker image
           run: docker build -t paved-road-sample-api:${{github.sha}} .
     terraform:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         steps:
         - name: Checkout code
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -48,7 +48,7 @@ jobs:
           run: terraform -chdir=terraform init -input=false && terraform -chdir=terraform validate
     secrets_scan:
         name: gitleaks
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
           with:
@@ -59,7 +59,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     sast:
       name: semgrep
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       container:
         image: semgrep/semgrep:latest
       steps:
@@ -77,14 +77,14 @@ jobs:
           --text
     iac-scan:
       name: iac-scan
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       permissions:
         contents: read
         security-events: write
       steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@master
+        uses: bridgecrewio/checkov-action@f93e43550d669f41ed6fcfa423a3fcb7484a36cd
         with:
           directory: terraform
           framework: terraform
@@ -92,20 +92,20 @@ jobs:
           output_format: sarif
           output_file_path: iac-results.sarif
       - name: Upload SARIF File
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
     docker-file-scan:
       name: docker-file-scan
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       permissions:
         contents: read
         security-events: write
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Run Trivy vulnerability scanner in config mode
-          uses: aquasecurity/trivy-action@v0.36.0
+          uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee
           with:
             scan-type: 'config'
             scan-ref: './Dockerfile'
@@ -114,14 +114,14 @@ jobs:
             output: 'trivy-results-docker-file.sarif'
             exit-code: 1
         - name: Upload SARIF
-          uses: github/codeql-action/upload-sarif@v3
+          uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
           if: success() || failure()
           with:
             sarif_file: 'trivy-results-docker-file.sarif'
 
     docker-image-scan:
       name: docker-image-scan
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       permissions:
         contents: read
         security-events: write
@@ -132,7 +132,7 @@ jobs:
           run: docker buildx build --load -t paved-road-sample-api:${{github.sha}} .
           # Generate the full SARIF report without breaking the build
         - name: Generate SARIF Security Report 
-          uses: aquasecurity/trivy-action@v0.36.0
+          uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
@@ -140,7 +140,7 @@ jobs:
             output: 'trivy-results-docker-image.sarif'
             exit-code: 0
         - name: Evaluate Security Gate 
-          uses: aquasecurity/trivy-action@v0.36.0
+          uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
@@ -149,7 +149,7 @@ jobs:
             ignore-unfixed: true
             exit-code: 1
         - name: Upload SARIF
-          uses: github/codeql-action/upload-sarif@v3
+          uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
           if: always() # Ensures the report uploads even if the Gatekeeper step fails
           with:
             sarif_file: 'trivy-results-docker-image.sarif'
