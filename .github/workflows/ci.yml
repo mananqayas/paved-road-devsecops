@@ -92,7 +92,7 @@ jobs:
           output_format: sarif
           output_file_path: iac-results.sarif
       - name: Upload SARIF File
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
@@ -111,10 +111,10 @@ jobs:
             scan-ref: '.'
             severity: 'CRITICAL,HIGH'
             format: 'sarif'
-            ouput: 'trivy-results-docker-file.sarif'
+            output: 'trivy-results-docker-file.sarif'
             exit-code: 1
         - name: Upload SARIF
-          uses: github/codeql-action/upload-sarif@v2
+          uses: github/codeql-action/upload-sarif@v3
           if: success() || failure()
           with:
             sarif_file: 'trivy-results-docker-file.sarif'
@@ -141,7 +141,7 @@ jobs:
             output: 'trivy-results-docker-image.sarif'
             exit-code: 1
         - name: Upload SARIF
-          uses: github/codeql-action/upload-sarif@v2
+          uses: github/codeql-action/upload-sarif@v3
           if: success() || failure()
           with:
             sarif_file: 'trivy-results-docker-image.sarif'
