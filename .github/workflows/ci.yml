@@ -92,7 +92,7 @@ jobs:
           output_format: sarif
           output_file_path: iac-results.sarif
       - name: Upload SARIF File
-        uses: aquasecurity/trivy-action@v.36.0 
+        uses: aquasecurity/trivy-action@v0.36.0 
         if: success() || failure()
         with:
           sarif_file: iac-results.sarif
@@ -105,7 +105,7 @@ jobs:
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Run Trivy vulnerability scanner in config mode
-          uses: aquasecurity/trivy-action@v.36.0 
+          uses: aquasecurity/trivy-action@v0.36.0 
           with:
             scan-type: 'config'
             scan-ref: './Dockerfile'
@@ -140,7 +140,7 @@ jobs:
             output: 'trivy-results-docker-image.sarif'
             exit-code: 0
         - name: Evaluate Security Gate 
-          uses: aquasecurity/trivy-action@v.36.0 
+          uses: aquasecurity/trivy-action@v0.36.0 
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
