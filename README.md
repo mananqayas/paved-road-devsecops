@@ -1,7 +1,7 @@
 # Paved-Road DevSecOps Pipeline
 A reusable, opinionated CI/CD pipeline ("paved road") that any service team can adopt.
 
-Security is built into the road, not bolted on: every PR gets secret scanning,and SAST gates until Phase 2 of this project. 
+Security is built into the road, not bolted on: every PR gets secrets, SAST, IaC security misconfigurations, Dockerfile and container image scanning. Critical/High vulnerabilities block developer's PR requests. Each failure exits actionble directions for developers to fix before PR is merged.
 
 ## Problem
 
@@ -30,21 +30,24 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
                  │  Signed image + SBOM   │  verify.sh proves it
                  └────────────────────────┘
 ```
-**Phase 2. (this phase):** Automated code scanning job for secrets on every code commit and PR. Static Application Security Testing (SAST) CI job using Semgrep implementing custom [CWE Top 25 rules](https://cwe.mitre.org/top25/archive/2025/2025_cwe_top25.html).
+**Phase 3. (this phase):** IaC configuration files are scanned for security misconfigurations following industry standards like CIS Benchmarks, SOC 2 etc. Infrastructure is tested statically before cloud resources provisioning request is made. Dockerfile for application containerization is tested for security misconfigurations like running it as root user and not using healthchecks. Also, after the image is built, its OS libraries and runtime application packages are also tested statically for CRITICAL and HIGH vulnerabilites.
 
 + baseline Actions workflow (python test, docker build, terraform fmt/validate)
 + branch protection (0 reviewers for solo setup)
 + secrets scanning ci job using gitleaks
 + Static Application Security Testing using Semgrep
++ IaC security misconfiguration scanning using Checkov
++ Dockerfile and docker image binary are scanned using Aqua Security Trivy
++ SARIF reports from IaC, Dockerfile and container images are sent to GitHub Advanced Security
 
 
 ## Threat model
-| Threat | Phase 2.0 posture | Paved-road mitigation (later phases) |
+| Threat | Phase 3.0 posture | Paved-road mitigation (later phases) |
 | --- | --- | --- |
-| Secret committed to git | Blocked at PR | Gitleaks CI, blocks PR|
+| Secret committed to git | Blocked at PR | Gitleaks CI, blocks PR |
 | Vulnerable app code merged | SAST fails on any ```ERROR``` finding at PR | Semgrep SAST + 25 custom rules, blocks PR |
-| Insecure infra merged | `fmt`/`validate` only | Checkov IaC scan, blocks on HIGH/CRITICAL (3.0) |
-| CVE in base image / deps | No scanning | Trivy |
+| Insecure infra merged | `fmt`/`validate` + Blocked at PR for `CRITICAL` and `HIGH` errors | Checkov IaC scan, blocks on HIGH/CRITICAL|
+| CVE in base image / deps | Dockerfile and image are scanned for security vulnerabilities | Trivy |
 | Tampered image deployed | Unsigned | Cosign keyless (OIDC) signing, `verify.sh` (4.0) |
 | Unknown what's inside image | No inventory | SBOM per image, attached as attestation (4.0) |
 
@@ -63,6 +66,14 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 - SAST ci job + CWE Top 25 Application Security Vulnerabilities Custom Rules using Semgrep
 - Semgrep rules cover OWASP Top 10 security vulnerabilities like XSS, SQLi, CSRF, Missing Authorization etc
 
+## What was built (Phase 3.0)
+
+- checkov ci job (IaC scanning)
+- trivy ci job for Dockerfile misconfigurations (Dockerfile scan)
+- tricy ci job for docker image scan for `CRITICAL` and `HIGH` severity vulnerabilities
+- SARIF (Static Analysis Results Interchange Format) reports are sent to GitHub Advanced Security
+
+
 ## Reproduce in one command
 
 ```bash
@@ -77,6 +88,15 @@ semgrep scan \
     --metrics=off \
     --json \
     --output semgrep-results.json
+```
+```
+checkov -d terraform/
+```
+```
+trivy config --severity 'HIGH,CRITICAL' Dockerfile
+```
+```
+trivy image paved-road-sample-api:dev --severity 'CRITICAL,HIGH'
 ```
 ```bash
 make all    # install + pytest + compile check (no docker/terraform needed) + gitleaks + semgrep-sast-test + semgrep-sast-scan
@@ -224,12 +244,55 @@ Ran 25 rules on 1 file: 0 finding
 
 ![SAST PR block](./docs/images/pr_blocked_on_insecure_code_sast.png)
 
+**Done-gate for Phase 3.0:** green pipeline on clean code, secure IaC configuration, secrets free, secure Dockerfile and docker container image.
+
++ [x] `checkov -d terraform/` runs locally with zero errors (see below)
++ [x] `trivy config --severity 'HIGH,CRITICAL' Dockerfile`
++ [x] `trivy image --ignore-unfixed --severity 'HIGH,CRITICAL' paved-road-sample-api:dev`
+`
+```
+
+[ terraform framework ]: 100%|████████████████████|[3/3], Current File Scanned=terraform/variables.tf
+[ secrets framework ]: 100%|████████████████████|[3/3], Current File Scanned=terraform/terraform.tf
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By Prisma Cloud | version: 3.3.29
+
+```
+```
+Report Summary
+
+┌────────────┬────────────┬───────────────────┐
+│   Target   │    Type    │ Misconfigurations │
+├────────────┼────────────┼───────────────────┤
+│ Dockerfile │ dockerfile │         0         │
+└────────────┴────────────┴───────────────────┘
+
+```
+```
+
+oTotal: 6 (UNKNOWN: 0, LOW: 1, MEDIUM: 5, HIGH: 0, CRITICAL: 0)
+```
+
+**PR blocked on insecure Dockerfile and container image**
+
+![Insecure Docker PR block](./docs/images/pr_blocked_on_insecure_dockerfile_and_image.png)
+
+**PR blocked on insecure infrastructure provisioning**
+
+![Misconfigured IaC PR block](./docs/images/pr_blocked_on_insecure_infrastructure_provisioning_code.png)
 ## Trade-offs
 
 - **FastAPI over Flask:** better for my Python background and for writing meaningful Semgrep custom rules later (typed endpoints).
 - **Terraform null provider in Phase 1.0:** keeps cost at $0 and CI green without cloud credentials; real AWS resources arrive in Checkov in Phase 3.0.
 - **Slim image, not distroless/aline (yet):** debuggability first; Trivy + hardening decisions land with evidence in Phase 3.0 (see ADR 0002).
 - **GitHub Actions over Jenkins/CircleCI:** zero infra, OIDC-native (needed for Cosign keyless in Phase 4.0), free for public repos, See `docs/adr/0001`
+- ***No real AWS resources*: this project is for developer experience and security, testing locally and on GitHub Actions CI for free.
 
 ## Framework mapping
 | Control | NIST CSF 2.0| SOC 2 CC |
@@ -237,12 +300,12 @@ Ran 25 rules on 1 file: 0 finding
 | CI runs tests on every change (1.0) | PR.PS-1 (baseline config) | CC7.2 (monitoring) |
 | Branch protection, required reviews (1.0) | PR.AC-4 (access permissions) | CC6.1 (logical access) |
 | Secret scanning (2.0) | PR.DS-1 (data-at-rest protection) | CC6.7 (encryption/keys) |
-| SAST (2.0) built, IaC/image (3.0) planned | DE.CM-8 (vuln scanning)  | CC7.1 (vuln mgmt) |
+| SAST (2.0) built, IaC/image (3.0) | DE.CM-8 (vuln scanning)  | CC7.1 (vuln mgmt) |
 | Image signing + SBOM (4.0, planned) | PR.DS-6 (integrity checking) |  CC7.2   |
 
 ## Cost
 
-Phase 1.0 + Phase 2.0: **\$0** – GitHub Actions free tier (public repo), no cloud resources (null Terraform provider), no third-party SaaS. Later phases stay $0: all scanners are OSS, Cosign keyless uses free Sigstore infrastructure.
+Phase 1.0 + Phase 2.0 + Phase 3.0: **\$0** – GitHub Actions free tier (public repo), no cloud resources (null Terraform provider), no third-party SaaS. Later phases stay $0: all scanners are OSS, Cosign keyless uses free Sigstore infrastructure.
 
 
 ## Teardown
@@ -262,6 +325,6 @@ No cloud resources, no credentials, no cost to unwind.
 
 - [X] **1.0 Foundations** – sample app, baseline CI, branch protection (this phase)
 - [X] **2.0 Secrets && SAST** – Gitleaks CI job, Semgrep + CWE Top 25 custom rules
-- [ ] **3.0 IaC & image scanning** – Checkov, Trivy fs+image, SARIF, severity gates
+- [x] **3.0 IaC & image scanning** – Checkov, Trivy fs+image, SARIF, severity gates
 - [ ] **4.0 Signing & SBOM** – Cosign keyless, SBOM attestation, `verify.sh`
 - [ ] **5.0 Docs & case study** – diagram, demo GIF, mananqayas.com write-up
