@@ -25,4 +25,4 @@ trivy-dockerfile-scan:
 trivy-image-scan:
 	trivy image paved-road-sample-api:dev --severity 'CRITICAL,HIGH'
 all: install test lint gitleaks semgrep-sast-test semgrep-sast-scan checkov-iac-scan trivy-dockerfile-scan trivy-image-scan
-	@echo "Phase 3.0 local checks passed."
+	@echo "Phase 1.0 local checks passed."
