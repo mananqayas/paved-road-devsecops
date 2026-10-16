@@ -19,7 +19,7 @@ We will adopt **Semgrep** as this project's standard static application security
 + **Central Detection (CI Pipeline):** We will integrate semgrep with GitHub Actions CI job using docker image inside the ubuntu runner named ```semgrep/semgrep:latest```.
 + **Enforcement:** CI pipeline scans will be configured as **blocking checks.** Any pipeline that identifies code containing one of the CWE Top 25 rules will fail, preventing the code from being merged until the vulnerability is remediated.
 
-## Alternative Decisions
+## Alternative considerations
 
 ### Option 1: SonarQube / SonarCloud
 

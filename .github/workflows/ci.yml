@@ -61,7 +61,7 @@ jobs:
       name: semgrep
       runs-on: ubuntu-24.04
       container:
-        image: semgrep/semgrep:latest
+        image: semgrep/semgrep@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
       steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Unit-test the custom Semgrep rules
@@ -84,15 +84,17 @@ jobs:
       steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@v12
+        uses: bridgecrewio/checkov-action@6f26dc90000b74feb589a906cdfae540f5119895
         with:
           directory: terraform
           framework: terraform
           quiet: true
           output_format: sarif
-          soft_fail: true
+          output_file_path: results.sarif
+          soft_fail: false
       - name: Upload SARIF File
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        if: success() || failure()
         with:
           sarif_file: results.sarif
     docker-file-scan:
@@ -104,7 +106,7 @@ jobs:
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Run Trivy vulnerability scanner in config mode
-          uses: aquasecurity/trivy-action@v0.36.0 
+          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
           with:
             scan-type: 'config'
             scan-ref: './Dockerfile'
@@ -131,7 +133,7 @@ jobs:
           run: docker buildx build --load -t paved-road-sample-api:${{github.sha}} .
           # Generate the full SARIF report without breaking the build
         - name: Generate SARIF Security Report 
-          uses: aquasecurity/trivy-action@v0.36.0 
+          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
@@ -139,7 +141,7 @@ jobs:
             output: 'trivy-results-docker-image.sarif'
             exit-code: 0
         - name: Evaluate Security Gate 
-          uses: aquasecurity/trivy-action@v0.36.0 
+          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
