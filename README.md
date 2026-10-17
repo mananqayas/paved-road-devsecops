@@ -1,7 +1,7 @@
 # Paved-Road DevSecOps Pipeline
 A reusable, opinionated CI/CD pipeline ("paved road") that any service team can adopt.
 
-Security is built into the road, not bolted on: every PR gets secrets, SAST, IaC security misconfigurations, Dockerfile and container image scanning. Critical/High vulnerabilities block developer's PR requests. Each failure exits actionble directions for developers to fix before PR is merged.
+Security is built into the road, not bolted on: every PR gets secrets, SAST, IaC security misconfigurations, Dockerfile and container image scanning. Critical/High vulnerabilities block developer's PR requests. Each failure exits actionable directions for developers to fix before PR is merged.
 
 ## Problem
 
@@ -30,15 +30,15 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
                  │  Signed image + SBOM   │  verify.sh proves it
                  └────────────────────────┘
 ```
-**Phase 3. (this phase):** IaC configuration files are scanned for security misconfigurations following industry standards like CIS Benchmarks, SOC 2 etc. Infrastructure is tested statically before cloud resources provisioning request is made. Dockerfile for application containerization is tested for security misconfigurations like running it as root user and not using healthchecks. Also, after the image is built, its OS libraries and runtime application packages are also tested statically for CRITICAL and HIGH vulnerabilites.
+**Phase 3. (this phase):** IaC configuration files are scanned for security misconfigurations following industry standards like CIS Benchmarks, SOC 2 etc. Infrastructure is tested statically before cloud resources provisioning request is made. Dockerfile for application containerization is tested for security misconfigurations like running it as root user and not using healthchecks. Also, after the image is built, its OS libraries and runtime application packages are also tested statically for CRITICAL and HIGH vulnerabilities.
 
 + baseline Actions workflow (python test, docker build, terraform fmt/validate)
 + branch protection (0 reviewers for solo setup)
-+ secrets scanning ci job using gitleaks
++ secrets scanning ci job using gitleaks with negative test PR (Fake AWS Key)
 + Static Application Security Testing using Semgrep
 + IaC security misconfiguration scanning using Checkov
 + Dockerfile and docker image binary are scanned using Aqua Security Trivy
-+ SARIF reports from IaC, Dockerfile and container images are sent to GitHub Advanced Security
++ SARIF reports from IaC, Dockerfile and container images are sent to GitHub code scanning
 
 
 ## Threat model
@@ -46,7 +46,7 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 | --- | --- | --- |
 | Secret committed to git | Blocked at PR | Gitleaks CI, blocks PR |
 | Vulnerable app code merged | SAST fails on any ```ERROR``` finding at PR | Semgrep SAST + 25 custom rules, blocks PR |
-| Insecure infra merged | `fmt`/`validate` + Blocked at PR for `CRITICAL` and `HIGH` errors | Checkov IaC scan, blocks on HIGH/CRITICAL|
+| Insecure infra merged | `fmt`/`validate` + Blocked at PR for any failed Checkov policy | Checkov IaC scan, blocks on HIGH/CRITICAL|
 | CVE in base image / deps | Dockerfile and image are scanned for security vulnerabilities | Trivy |
 | Tampered image deployed | Unsigned | Cosign keyless (OIDC) signing, `verify.sh` (4.0) |
 | Unknown what's inside image | No inventory | SBOM per image, attached as attestation (4.0) |
@@ -70,8 +70,8 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 
 - checkov ci job (IaC scanning)
 - trivy ci job for Dockerfile misconfigurations (Dockerfile scan)
-- tricy ci job for docker image scan for `CRITICAL` and `HIGH` severity vulnerabilities
-- SARIF (Static Analysis Results Interchange Format) reports are sent to GitHub Advanced Security
+- trivy ci job for docker image scan for `CRITICAL` and `HIGH` severity vulnerabilities
+- SARIF (Static Analysis Results Interchange Format) reports are sent to GitHub code scanning
 
 
 ## Reproduce in one command
@@ -246,10 +246,10 @@ Ran 25 rules on 1 file: 0 finding
 
 **Done-gate for Phase 3.0:** green pipeline on clean code, secure IaC configuration, secrets free, secure Dockerfile and docker container image.
 
-+ [x] `checkov -d terraform/` runs locally with zero errors (see below)
-+ [x] `trivy config --severity 'HIGH,CRITICAL' Dockerfile`
-+ [x] `trivy image --ignore-unfixed --severity 'HIGH,CRITICAL' paved-road-sample-api:dev`
-`
+- [x] `checkov -d terraform/` runs locally with zero errors (see below)
+- [x] `trivy config --severity 'HIGH,CRITICAL' Dockerfile`
+- [x] `trivy image --ignore-unfixed --severity 'HIGH,CRITICAL' paved-road-sample-api:dev`
+
 ```
 
 [ terraform framework ]: 100%|████████████████████|[3/3], Current File Scanned=terraform/variables.tf
