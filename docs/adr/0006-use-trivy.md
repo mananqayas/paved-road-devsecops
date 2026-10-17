@@ -25,7 +25,6 @@ We will enforce this tool by:
 
 1. Embedding Trivy into our global, reusable CI pipeline templates.
 2. Breaking builds on **Critical** and **High** vulnerabilities for all newly created container images.
-3. Automatically generating a Software Bill of Materials (SBOM) in CycloneDX format during every image build to track third-party dependencies.
 
 ## Alternative considerations
 
@@ -37,7 +36,7 @@ We will enforce this tool by:
 
 + **Pros:** Exceptionally polished developer experience with automated pull requests that suggest upgrades to more secure base images.
 
-+ **Cons:** Commercial tool with restrictive open-source/free-tier API limits. Scaling this platfom across our growing engineering team would introduce substantial, unpreditable licensing costs.
++ **Cons:** Commercial tool with restrictive open-source/free-tier API limits. Scaling this platform across our growing engineering team would introduce substantial, unpredictable licensing costs.
 
 ### Option 3: Clair / Anchore Engine
 

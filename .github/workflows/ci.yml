@@ -106,7 +106,7 @@ jobs:
       steps:
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         - name: Run Trivy vulnerability scanner in config mode
-          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+          uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
           with:
             scan-type: 'config'
             scan-ref: './Dockerfile'
@@ -133,7 +133,7 @@ jobs:
           run: docker buildx build --load -t paved-road-sample-api:${{github.sha}} .
           # Generate the full SARIF report without breaking the build
         - name: Generate SARIF Security Report 
-          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+          uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
@@ -141,7 +141,7 @@ jobs:
             output: 'trivy-results-docker-image.sarif'
             exit-code: 0
         - name: Evaluate Security Gate 
-          uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+          uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
           with:
             scan-type: 'image'
             image-ref: paved-road-sample-api:${{github.sha}}
