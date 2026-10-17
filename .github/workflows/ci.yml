@@ -154,3 +154,44 @@ jobs:
           if: always() # Ensures the report uploads even if the Gatekeeper step fails
           with:
             sarif_file: 'trivy-results-docker-image.sarif'
+    publish:
+      name: docker-image-push
+      runs-on: ubuntu-24.04
+      if: github.ref == 'refs/heads/main'
+      # Crucial for GHCR permissions
+      permissions:
+        contents: read
+        packages: write
+        id-token: write # OIDC for keyless signing
+      needs: [python, docker, terraform, secrets_scan, sast, iac-scan, docker-file-scan, docker-image-scan]
+      steps:
+        - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        - name: Setup Docker buildx
+          uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        - name: Log in to GHCR
+          uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        - name: Extract Metadata (Git SHA as Immutable Tag)
+          id: meta
+          uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
+          with:
+            images: ghcr.io/${{ github.repository }}
+            tags: |
+              # This configures your exact Git Commit SHA as the primary immutable tag
+              type=sha,format=long,prefix=sha-
+              # Also tags as 'latest' for standard deployment tracking
+              type=raw,value=latest
+        - name: Build and push Immutable Image
+          uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+          with:
+            context: .
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+
+
+
+
