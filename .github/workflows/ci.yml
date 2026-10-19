@@ -239,7 +239,7 @@ jobs:
             EOF 
             jq empty provenance.json
             cosign attest --yes \
-            --type "https://slsa.dev/provenance/v0.2" \
+            --type slsaprovenance02 \
             --predicate provenance.json \
               "${IMAGE_REF}"
         - name: Verify SLSA provenance
@@ -248,7 +248,7 @@ jobs:
             IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
           run: |
             cosign verify-attestation \
-              --type "https://slsa.dev/provenance/v0.2" \
+              --type slsaprovenance02 \
               --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}" \
               --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
               "${IMAGE_REF}"
