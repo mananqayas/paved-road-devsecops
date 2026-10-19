@@ -9,6 +9,7 @@ class HelloResponse(BaseModel):
 
 @app.get("/healthz", tags=["ops"])
 def healthz():
+    # test
     return {"status": "ok"}
 
 @app.get("/hello", response_model=HelloResponse, tags=["api"])
