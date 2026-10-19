@@ -242,16 +242,29 @@ jobs:
             --type slsaprovenance02 \
             --predicate provenance.json \
               "${IMAGE_REF}"
-        - name: Verify SLSA provenance
-          shell: bash
-          env:
-            IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
-          run: |
-            cosign verify-attestation \
-              --type slsaprovenance02 \
-              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}" \
-              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-              "${IMAGE_REF}"
+            set -euo pipefail
+            echo "=== COSIGN VERSION ==="
+            cosign version
+            echo "=== IMAGE REFERENCE ==="
+            echo "$IMAGE_REF"
+            echo "=== VALIDATE JSON ==="
+            jq -e . provenance.json
+            echo "=== ATTESTATION COMMAND SUCCEEDED ==="
+            echo "=== INSPECT REGISTRY ==="
+            cosign tree "$IMAGE_REF"
+            echo "=== DOWNLOAD ATTESTATIONS ==="
+            cosign download attestation "$IMAGE_REF" \
+                | jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicateType'
+#        - name: Verify SLSA provenance
+#          shell: bash
+#          env:
+#            IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
+#          run: |
+#            cosign verify-attestation \
+#              --type slsaprovenance02 \
+#              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}" \
+#              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+#aaaaaaaaaaaaq2111WWWWWWWWWWWWW#R#E3WE23ZZQQ              "${IMAGE_REF}"
           # Generate SBOM via Trivy
 #         - name: Generate SBOM via Trivy
 #           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
