@@ -217,7 +217,35 @@ jobs:
             # 2. Run cosign attest using the keyless flag (--yes)
             cosign attest --yes \
               --type slsaprovenance \
-              --predicate github_context.json \
+              --predicate <(cat 
+              <<EOF
+              {
+                "buildType": "https://github.com/actions/runner",
+                "builder": {
+                  "id": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                },
+                "invocation": {
+
+                "configSource": {
+                  "uri": "git+https://github.com/${{ github.repository }}@${{github.ref}}",
+                  "digest": {"sha1": "${{ github.sha }}"},
+                  "entryPoint": "${{ github.workflow }}"
+            
+            },
+                "metadata": {
+
+                "buildStartedOn": "${{ github.event.head_commit.timestamp }}",
+                "completeness": {
+                  "parameters": true,
+                  "environment": true,
+                  "materials": true
+
+            }
+            }
+            } 
+              }
+              EOF
+              ) \
               "${IMAGE_REF}"
           # Generate SBOM via Trivy
         - name: Generate SBOM via Trivy
