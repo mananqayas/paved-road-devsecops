@@ -208,21 +208,17 @@ jobs:
           # ATTESTATION 1: SLSA PROVENANCE
         - name: Sign with attestation (SLSA provenance)
           env:
-            ALL_TAGS: ${{ steps.meta.outputs.tags }}
-            IMAGE_DIGEST: ${{ steps.build-and-push.outputs.digest }}
+            IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
           run: |
             # 1. Use GitHub's built-in tool to generate standard SLSA predicate JSON
             # This compiles details like repository URL, runner ID, and commit SHA
             echo '${{ toJSON(github) }}' > github_context.json
 
-            # 2 Extract only the very first tag line (the sha- tag)
-            CLEAN_BASE_TAG="${ALL_TAGS%%,*}"
-
-            # 3. Run cosign attest using the keyless flag (--yes)
+            # 2. Run cosign attest using the keyless flag (--yes)
             cosign attest --yes \
               --type slsaprovenance \
               --predicate github_context.json \
-              "${CLEAN_BASE_TAG}@${IMAGE_DIGEST}"
+              "${IMAGE_REF}"
           # Generate SBOM via Trivy
         - name: Generate SBOM via Trivy
           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
@@ -233,11 +229,9 @@ jobs:
         # ATTESTATION 2: SBOM MANIFEST
         - name: Attest SBOM
           env:
-            ALL_TAGS: ${{ steps.meta.outputs.tags }}
-            IMAGE_DIGEST: ${{ steps.build-and-push.outputs.digest }}
+            IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
           run: |
-            CLEAN_TAG="${ALL_TAGS%%,*}"
             cosign attest --yes \
               --type spdxjson \
               --predicate sbom.spdx.json \
-              "${CLEAN_TAG}@${IMAGE_DIGEST}"
+              "${IMAGE_REF}"
