@@ -214,8 +214,8 @@ jobs:
             # This compiles details like repository URL, runner ID, and commit SHA
             echo '${{ toJSON(github) }}' > github_context.json
 
-            # 2. Run consign attest using the keyless flag (--yes)
-            consign attest --yes \
+            # 2. Run cosign attest using the keyless flag (--yes)
+            cosign attest --yes \
               --type slsa
               --predicate github_context.json \
               "${IMAGE_DIGEST}"
