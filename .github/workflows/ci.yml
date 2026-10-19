@@ -208,7 +208,7 @@ jobs:
           # ATTESTATION 1: SLSA PROVENANCE
         - name: Sign with attestation (SLSA provenance)
           env:
-            ALL_TAGS: ${{ steps.meta.outputs.bake-file-tags }}
+            ALL_TAGS: ${{ steps.meta.outputs.tags }}
             IMAGE_DIGEST: ${{ steps.build-and-push.outputs.digest }}
           run: |
             # 1. Use GitHub's built-in tool to generate standard SLSA predicate JSON
@@ -216,7 +216,7 @@ jobs:
             echo '${{ toJSON(github) }}' > github_context.json
 
             # 2 Extract only the very first tag line (the sha- tag)
-            CLEAN_BASE_TAG=$(echo "${ALL_TAGS}" | head -n 1)
+            CLEAN_BASE_TAG="${ALL_TAGS%%,*}"
 
             # 3. Run cosign attest using the keyless flag (--yes)
             cosign attest --yes \
@@ -233,10 +233,10 @@ jobs:
         # ATTESTATION 2: SBOM MANIFEST
         - name: Attest SBOM
           env:
-            ALL_TAGS: ${{ steps.meta.outputs.bake-file-tags }}
+            ALL_TAGS: ${{ steps.meta.outputs.tags }}
             IMAGE_DIGEST: ${{ steps.build-and-push.outputs.digest }}
           run: |
-            CLEAN_TAG=$(echo "${ALL_TAGS}" | head -n 1)
+            CLEAN_TAG="${ALL_TAGS%%,*}"
             cosign attest --yes \
               --type spdxjson \
               --predicate sbom.spdx.json \
