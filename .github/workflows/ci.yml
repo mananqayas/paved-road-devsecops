@@ -208,7 +208,7 @@ jobs:
           # ATTESTATION 1: SLSA PROVENANCE
         - name: Sign with attestation (SLSA provenance)
           env:
-            IMAGE_DIGEST: ghcr.io/${{ github.repository }}:${{  steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest  }}
+            IMAGE_DIGEST: ghcr.io/${{ github.repository }}:${{  steps.meta.outputs.bake-file-tags[0] }}@${{ steps.build-and-push.outputs.digest  }}
           run: |
             # 1. Use GitHub's built-in tool to generate standard SLSA predicate JSON
             # This compiles details like repository URL, runner ID, and commit SHA
@@ -223,13 +223,13 @@ jobs:
         - name: Generate SBOM via Trivy
           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
           with:
-            image-ref: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest }}
+            image-ref: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.bake-file-tags[0] }}@${{ steps.build-and-push.outputs.digest }}
             format: 'spdx-json'
             output: 'sbom.spdx.json'
         # ATTESTATION 2: SBOM MANIFEST
         - name: Attest SBOM
           env:
-            IMAGE_DIGEST: ghcr.io/${{ github.repository }}:${{  steps.meta.outputs.tags }}@${{steps.build-and-push.outputs.digest }}
+            IMAGE_DIGEST: ghcr.io/${{ github.repository }}:${{  steps.meta.outputs.bake-file-tags[0] }}@${{steps.build-and-push.outputs.digest }}
           run: |
             cosign attest --yes \
               --type spdxjson
