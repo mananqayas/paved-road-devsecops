@@ -220,7 +220,7 @@ jobs:
 
             # 3. Run cosign attest using the keyless flag (--yes)
             cosign attest --yes \
-              --type slsa \
+              --type slsaprovenance \
               --predicate github_context.json \
               "${CLEAN_BASE_TAG}@${IMAGE_DIGEST}"
           # Generate SBOM via Trivy
