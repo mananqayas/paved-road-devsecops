@@ -204,7 +204,7 @@ jobs:
             for tag in ${TAGS}; do
               images+="${tag}@${DIGEST} "
             done
-            cosign sign --yes ${images}
+            cosign sign --yes "${images}"
           # ATTESTATION 1: SLSA PROVENANCE
         - name: Sign with attestation (SLSA provenance)
           shell: bash
