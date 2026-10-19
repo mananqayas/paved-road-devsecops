@@ -255,10 +255,6 @@ jobs:
             echo "=== DOWNLOAD ATTESTATIONS ==="
             cosign download attestation "$IMAGE_REF" \
                 | jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicateType'
-
-
-
-
 #        - name: Verify SLSA provenance
 #          shell: bash
 #          env:
@@ -268,7 +264,7 @@ jobs:
 #              --type slsaprovenance02 \
 #              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}" \
 #              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-#              "${IMAGE_REF}"
+#aaaaaaaaaaaaq2111WWWWWWWWWWWWW#R#E3WE23ZZQQ              "${IMAGE_REF}"
           # Generate SBOM via Trivy
 #         - name: Generate SBOM via Trivy
 #           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
