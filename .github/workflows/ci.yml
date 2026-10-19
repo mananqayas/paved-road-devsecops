@@ -213,14 +213,14 @@ jobs:
           run: |
             cat  > provenance.json <<EOF
             {
-              "buidtType": "https://github.com/actions/runner",
+              "buildType": "https://github.com/actions/runner",
               "builder": {
 
                 "id": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
                 },
 
               "invocation": {
-                "configureSource": {
+                "configSource": {
 
                   "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
                   "digest": {
@@ -234,7 +234,7 @@ jobs:
                 "metadata": {
                     "completeness": {
                         "parameters": false,
-                        "envrironment": false,
+                        "environment": false,
                         "materials": false
 
                 }
