@@ -258,21 +258,34 @@ jobs:
                   | @base64d
                   | fromjson
                   | .predicateType
-                '
+        - name: Install Trivy
+          uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
+          with:
+            version: v0.68.2               '
+        - name: Attest SBOM
+          shell: bash
+          env:
+            IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
+          run: |
+            trivy image \
+              --platform linux/amd64 \
+              --format cyclonedx \
+              --output sbom-amd64.cyclonedx.json \
+              "$IMAGE_REF"
 
-          # Generate SBOM via Trivy
-#         - name: Generate SBOM via Trivy
-#           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
-#           with:
-#             image-ref: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
-#             format: 'spdx-json'
-#             output: 'sbom.spdx.json'
-#         # ATTESTATION 2: SBOM MANIFEST
-#         - name: Attest SBOM
-#           env:
-#             IMAGE_REF: ghcr.io/${{ github.repository }}@${{ steps.build-and-push.outputs.digest }}
-#           run: |
-#             cosign attest --yes \
-#               --type spdxjson \
-#               --predicate sbom.spdx.json \
-#               "${IMAGE_REF}"
+            trivy image \
+              --platform linux/arm64 \
+              --format cyclonedx \
+              --output sbom-arm64.cyclonedx.json \
+              "$IMAGE_REF"
+
+            cosign attest --yes \
+            --type cyclonedx \
+            --predicate sbom-amd64.cyclonedx.json \
+            "$IMAGE_REF"
+
+            cosign attest --yes \
+            --type cyclonedx \
+            --predicate sbom-arm64.cyclonedx.json \
+            "$IMAGE_REF"
+
