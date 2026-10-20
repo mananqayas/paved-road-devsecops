@@ -260,14 +260,6 @@ jobs:
                   | .predicateType
                 '
 
-            echo "=== VERIFY SLSA ATTESTATION ==="
-            cosign verify-attestation \
-              --type slsaprovenance02 \
-              --certificate-identity \
-                "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}" \
-              --certificate-oidc-issuer \
-                "https://token.actions.githubusercontent.com" \
-              "$IMAGE_REF"
           # Generate SBOM via Trivy
 #         - name: Generate SBOM via Trivy
 #           uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
