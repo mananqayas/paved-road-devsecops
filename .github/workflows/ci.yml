@@ -300,4 +300,38 @@ jobs:
             --type cyclonedx \
             --predicate sbom-arm64.cyclonedx.json \
             "$IMAGE_REF"
+      outputs:
+        digest: ${{ steps.build-and-push.outputs.digest }}
+    verify-negative-tests:
+      runs-on: ubuntu-latest
+      needs: publish # needs the signed image digest
+      if: github.ref == 'refs/heads/main'
+      permissions:
+        contents: read
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        - name: unsigned image must be rejected
+          run: |
+            if ./verify.sh --image-ref docker.io/library/nginx:1.27-alpine; then
+              echo "FAIL: verifier accepted an unsigned image"; exit 1
+            fi
+            echo "PASS: unsigned image rejected"
+        - name: wrong image must be rejected
+          run: |
+            if ./verify.sh --image-ref ghcr.io/mananqayas/paved-road-devsecops@${{ needs.publish.outputs.digest }} --identity https://github.com/someone-else/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main; then
+              echo "FAIL: verifier accepted wrong identity"; exit 1
+            fi
+            echo "PASS: wrong identity rejected"
+        - name: missing attestation must be rejected
+          run: |
+            if cosign verify-attestation --type cyclonedx \
+              --certificate-identity "https://github.com/mananqayas/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              docker.io/library/nginx:1.27-alpine; then
+              echo "FAIL: attestation check passed without attestation"; exit 1
+            fi
+            echo "PASS: missing attestation rejected"
+
+
 
