@@ -311,6 +311,8 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        - name: Install Cosign
+          uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22
         - name: unsigned image must be rejected
           run: |
             if ./verify.sh --image-ref docker.io/library/nginx:1.27-alpine; then
