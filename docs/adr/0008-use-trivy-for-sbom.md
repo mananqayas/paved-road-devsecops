@@ -10,7 +10,7 @@ Following our decision to adopt software supply chain signing (ADR 0007), we mus
 An effective SBOM strategy requires:
 
 1. A **generation tool** that integrates seamlessly into our container compilation pipelines without introducing performance bottlenecks.
-2. A **standardized data schema** capable of accurately representing both OS-lvel system libraries and complex, application-level open-source language dependencies (transitive dependencies).
+2. A **standardized data schema** capable of accurately representing both OS-level system libraries and complex, application-level open-source language dependencies (transitive dependencies).
 3. Wide interoperability with downstream policy enforcement tools (e.g., Kyverno) and continuous vulnerability management scanners.
 
 ## Decision

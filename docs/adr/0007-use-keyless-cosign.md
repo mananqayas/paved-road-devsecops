@@ -9,7 +9,7 @@ Paved road devsecops project currently builds containerized application docker i
 
 Without this verification, we are vulnerable to:
 
-+ **Man-in-the-middle (MITM) / Registry Poisoning:** An attacker compromising our container registry could replace a legitimate image with a malicious one containing the same mutlable tag (e.g., :latest, or :main).
++ **Man-in-the-middle (MITM) / Registry Poisoning:** An attacker compromising our container registry could replace a legitimate image with a malicious one containing the same mutable tag (e.g., :latest, or :main).
 
 + **Vulnerability and Compliance Gaps:** We generate Software Bill of Materials (SBOMs), but because they are unsigned, their integrity cannot be verified at deployment or during runtime scanning.
 
@@ -23,14 +23,14 @@ We will adopt **Sigstore Cosign Keyless Signing** across all CI/CD pipelines to 
 
 1. **Identity Provider (OIDC):** We will utilize the OpenID Connect (OIDC) identity of our CI/CD platform (GitHub Actions) to request short-lived cryptographic certificates from Sigstore's certificate authority (**Fulcio**).
 2. **Transparency Log:** Signatures and certificates will be published to the **Rekor** transparency log to guarantee an immutable audit trail.
-3. **Artificat Scope:** For every build, we will generate an SBOM (in CycloneDX format), attach it to the image registry, and sign **both** the image digest and the SBOM digest.
+3. **Artifact Scope:** For every build, we will generate an SBOM (in CycloneDX format), attach it to the image registry, and sign **both** the image digest and the SBOM digest.
 4. **Target Reference:** All signing and verification steps must explicitly reference immutable OCI image **digests** (`sha256:...`) rather than mutable tags (`:latest`).
 
 ## Alternative considerations
 
 ### Option 1: Cosign with Static Key-Pairs (Manual Cryptographic Keys)
 + **Description:** Generating traditional private/public keys (`cosign.key`/`cosign.pub`), storing the private key inside a CI/CD secret vault, and signing artifacts manually.
-+ **Why Rejected:** Managing static keys introduces massive operational overhead. Keys must be rotated regularly, securely shared across multiple project teams, and protected against accidental credential leaks. If a private key is leaked, an attacker can sign malicious software completely undetected outside our CI system. Keyless signing elimiates this entire category of risk.
++ **Why Rejected:** Managing static keys introduces massive operational overhead. Keys must be rotated regularly, securely shared across multiple project teams, and protected against accidental credential leaks. If a private key is leaked, an attacker can sign malicious software completely undetected outside our CI system. Keyless signing eliminates this entire category of risk.
 
 ### Option 2: Notation (Notary Project v2)
 + **Description:** A CNCF-backed standard for signing OCI artifacts, heavily supported by cloud projects like AWS (Signer) and Azure.
@@ -53,7 +53,7 @@ We will adopt **Sigstore Cosign Keyless Signing** across all CI/CD pipelines to 
 + **Foundation for Enforcement:** Enables the future implementation of Kubernetes Admission Controllers (e.g., Kyverno or Policy Controller) to block unsigned images at the cluster gate.
 
 ### Negative / Risks (Trade-offs)
-+ **Dependency on Public Infra:** Replying on public Sigstore infrastructure (Fulcio/Rekor) introduces an external dependency unless we invest engineering effort to stand up a private Sigstore stack.
++ **Dependency on Public Infra:** Relying on public Sigstore infrastructure (Fulcio/Rekor) introduces an external dependency unless we invest engineering effort to stand up a private Sigstore stack.
 
 + **Pipeline Permissions:** CI pipelines must be granted specific runtime permissions to fetch OIDC identity tokens (e.g., id-token: write in GitHub Actions).
 
