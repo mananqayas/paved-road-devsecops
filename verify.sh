@@ -45,7 +45,7 @@ done
 : "${EXPECTED_COMMIT:?Error: --commit-sha is required}"
 
 
-
+# Cosign installation
 COSIGN_VERSION="v3.1.4"
 if ! command -v cosign &>/dev/null; then
 	OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -78,11 +78,12 @@ echo "Image's SBOMs are verified successfully";
 
 
 VERIFIED_REF=$(jq -r '.[0].critical.identity["docker-reference"]' <<< "$SIG_OUT")
+
 if [[ "$VERIFIED_REF" != "$IMAGE_REF" ]]; then
 	echo "Error: verified reference ($VERIFIED_REF) != requested ($IMAGE_REF)"
 	exit 1
 fi
-echo "$EXPECTED_COMMIT"
+
 
 VERIFIED_FILE="$(mktemp)"
 trap 'rm -f "$VERIFIED_FILE"' EXIT
@@ -103,28 +104,20 @@ die() {
 	exit 1
 }
 EXPECTED_DIGEST="${IMAGE_REF##*@sha256:}"
+echo "$EXPECTED_DIGEST"
 jq -s -e \
 	--arg repo "$SOURCE_REPO" \
 	--arg commit "$EXPECTED_COMMIT" \
-	--arg digest "$EXPECTED_DIGECT" \
+	--arg digest "$EXPECTED_DIGEST" \
 	--arg entry "CI" \
-	--arg builder_prefix "https://github.com/mananqayas/devsecops/actions/runs/" '
-	[
-	.[]
-	| (.dsseEnvelope.payload // .payload)
-	| @base64d
-	| fromjson
-	]
-	| any (.[];
-		.predicateType == "https://slsa.dev/provenance/v0.2"
-		and any (.subject[]?;
-		.digest.sha256 == $digest
-		)
-		and .predicate.invocation.configSource.uri == $repo
+	--arg builder_prefix "https://github.com/mananqayas/paved-road-devsecops/actions/runs" '[.[] | .payload | @base64d | fromjson] | any (.[];
+.predicateType == "https://slsa.dev/provenance/v0.2" and any(.subject[]?;
+.digest.sha256 == $digest)
+and .predicate.invocation.configSource.uri == $repo
+and .predicate.invocation.configSource.digest.sha1 == $commit
+and .predicate.invocation.configSource.entryPoint == $entry
+and (.predicate.builder.id | type == "string" and startswith($builder_prefix))
+)' "$VERIFIED_FILE" >/dev/null || die "SLSA provenance FAILED"
 
-		and .predicate.invocation.configSource.entryPoint == $entry
-
-		and (.predicate.builder.id | type == "string" and startswith($builder_prefix))
-		)
-		' "$VERIFIED_FILE" > /dev/null || 
-			die "SLSA provenance policy FAILED"
+echo "SLSA provenance policy PASSED"
+echo "Trusted identity, image digest, repository, commit and builder matched"
