@@ -306,6 +306,8 @@ jobs:
       runs-on: ubuntu-24.04
       needs: publish # needs the signed image digest
       if: github.ref == 'refs/heads/main'
+      env:
+        IDENTITY: "https://github.com/${{ github.repository }}/.github/workflows/ci.yaml@refs/heads/main"
       permissions:
         contents: read
       steps:
@@ -315,22 +317,22 @@ jobs:
           uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22
         - name: unsigned image must be rejected
           run: |
-            if ./verify.sh --image-ref docker.io/library/nginx:1.27-alpine; then
+            if ./verify.sh --image-ref docker.io/library/nginx:1.27-alpine --identity "$IDENTITY" --commit-sha "${{ github.sha }}"; then
               echo "FAIL: verifier accepted an unsigned image"; exit 1
             fi
             echo "PASS: unsigned image rejected"
         - name: wrong image must be rejected
           run: |
-            if ./verify.sh --image-ref ghcr.io/mananqayas/paved-road-devsecops@${{ needs.publish.outputs.digest }} --identity https://github.com/someone-else/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main; then
+            if ./verify.sh --image-ref ghcr.io/mananqayas/paved-road-devsecops@${{ needs.publish.outputs.digest }} --identity https://github.com/someone-else/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main --commit-sha ${{ github.sha }}; then
               echo "FAIL: verifier accepted wrong identity"; exit 1
             fi
             echo "PASS: wrong identity rejected"
         - name: missing attestation must be rejected
           run: |
             if cosign verify-attestation --type cyclonedx \
-              --certificate-identity "https://github.com/mananqayas/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main" \
+              --certificate-identity "$IDENTITY" \
               --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-              docker.io/library/nginx:1.27-alpine; then
+              docker.io/library/nginx:1.27-alpine --commit-sha ${{ github.sha }}; then
               echo "FAIL: attestation check passed without attestation"; exit 1
             fi
             echo "PASS: missing attestation rejected"
