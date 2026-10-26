@@ -4,6 +4,15 @@ All notable decisions and changes, newest first. Conventional commits in git; th
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+
+## [4.0.0] - 2026-10-22
+
+### Added
+- **Docker build and push:** Added CI steps for docker build and push to GHCR
+- **SBOM production:** Generating CycloneDX SBOMs for OS libraries and runtime packages
+- **Cosign image sign and SBOM attestation:** Signed image artifact and SBOMs using cosign keyless public infra
+- **Verification:** Image signature and SBOM attestation are verified with our own certificate identity and image digest claims
+
 ## [3.0.0] - 2026-10-16
 
 ### Added

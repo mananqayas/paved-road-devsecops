@@ -1,7 +1,7 @@
 # Paved-Road DevSecOps Pipeline
 A reusable, opinionated CI/CD pipeline ("paved road") that any service team can adopt.
 
-Security is built into the road, not bolted on: every PR gets secrets, SAST, IaC security misconfigurations, Dockerfile and container image scanning. Critical/High vulnerabilities block developer's PR requests. Each failure exits actionable directions for developers to fix before PR is merged.
+Security is built into the road, not bolted on: every PR gets secrets, SAST, IaC security misconfigurations, Dockerfile, container image scanning. Critical/High vulnerabilities block developer's PR requests. Each failure exits with actionable directions for developers to fix before PR is merged. Each PR merge on main branch builds and pushes the container image to GHCR. Each build artifact (container image digest + CycloneDX SBOMs) is cryptographically signed using cosign's keyless public infrastructure for artifact integrity.
 
 ## Problem
 
@@ -30,26 +30,19 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
                  │  Signed image + SBOM   │  verify.sh proves it
                  └────────────────────────┘
 ```
-**Phase 3. (this phase):** IaC configuration files are scanned for security misconfigurations following industry standards like CIS Benchmarks, SOC 2 etc. Infrastructure is tested statically before cloud resources provisioning request is made. Dockerfile for application containerization is tested for security misconfigurations like running it as root user and not using healthchecks. Also, after the image is built, its OS libraries and runtime application packages are also tested statically for CRITICAL and HIGH vulnerabilities.
 
-+ baseline Actions workflow (python test, docker build, terraform fmt/validate)
-+ branch protection (0 reviewers for solo setup)
-+ secrets scanning ci job using gitleaks with negative test PR (Fake AWS Key)
-+ Static Application Security Testing using Semgrep
-+ IaC security misconfiguration scanning using Checkov
-+ Dockerfile and docker image binary are scanned using Aqua Security Trivy
-+ SARIF reports from IaC, Dockerfile and container images are sent to GitHub code scanning
-
++ *On every PR / push:* pytest, docker build, terraform validate, Gitleaks secrets, Semgrep SAST (25 custom CVE rules), Checkov IaC, Trivy Dockerfile + image scans - any failure blocks merge; SARIF to code scanning.
++ *On merge to main:* push to GHCR, Cosign keyless sign, Trivy SBOM + attestation, `verify.sh` + negative tests re-prove verification.
 
 ## Threat model
-| Threat | Phase 3.0 posture | Paved-road mitigation (later phases) |
+| Threat | Phase 4.0 posture | Paved-road mitigation (later phases) |
 | --- | --- | --- |
 | Secret committed to git | Blocked at PR | Gitleaks CI, blocks PR |
 | Vulnerable app code merged | SAST fails on any ```ERROR``` finding at PR | Semgrep SAST + 25 custom rules, blocks PR |
 | Insecure infra merged | `fmt`/`validate` + Blocked at PR for any failed Checkov policy | Checkov IaC scan, blocks on HIGH/CRITICAL|
 | CVE in base image / deps | Dockerfile and image are scanned for security vulnerabilities | Trivy |
-| Tampered image deployed | Unsigned | Cosign keyless (OIDC) signing, `verify.sh` (4.0) |
-| Unknown what's inside image | No inventory | SBOM per image, attached as attestation (4.0) |
+| Tampered image deployed | Signed | Cosign keyless (OIDC) signing, `verify.sh` |
+| Unknown what's inside image | OS system libraries + runtime application packages | SBOM per OS + image, attached as attestation |
 
 
 ## What was built (Phase 1.0)
@@ -73,6 +66,14 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
 - trivy ci job for docker image scan for `CRITICAL` and `HIGH` severity vulnerabilities
 - SARIF (Static Analysis Results Interchange Format) reports are sent to GitHub code scanning
 
+## What was built (Phase 4.0)
+
+- Multi-platform (amd64 + arm64) docker images builds in ci (main branch)
+- Artifacts are pushed to GHCR
+- CI trivy SBOM step produces CycloneDX SBOMs for OS + runtime packages
+- Cosign signs the image artifacts and SBOMs using OIDC + keyless signatures
+- `verify.sh` bash script created for image signature and sbom attestation verification
+- Negative tests for image signature and SBOM attestation verifications are added in ci pipeline
 
 ## Reproduce in one command
 
@@ -286,6 +287,28 @@ oTotal: 6 (UNKNOWN: 0, LOW: 1, MEDIUM: 5, HIGH: 0, CRITICAL: 0)
 **PR blocked on insecure infrastructure provisioning**
 
 ![Misconfigured IaC PR block](./docs/images/pr_blocked_on_insecure_infrastructure_provisioning_code.png)
+
+**Done-gate for phase 4.0:** On clean code passing mandatory CI checks, container images are built with immutable digest and signed once PR is merged with the main branch, negative tests are added in CI pipeline rejecting the unsigned and altered images.
+
+- [x] `cosign verify` with certificate identity and certificate OIDC issuer verifies image digest (see below)
+
+```
+./verify.sh --image-ref ghcr.io/mananqayas/paved-road-devsecops@sha256:84596e6ae63c01116fb051908bd2151ce48e57e00222e08be47fcfe9cdcdcb70 --identity "https://github.com/mananqayas/paved-road-devsecops/.github/workflows/ci.yml@refs/heads/main"
+
+Verification for ghcr.io/mananqayas/paved-road-devsecops@sha256:84596e6ae63c01116fb051908bd2151ce48e57e00222e08be47fcfe9cdcdcb70 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The code-signing certificate was verified using trusted certificate authority certificates
+
+Verification for ghcr.io/mananqayas/paved-road-devsecops@sha256:84596e6ae63c01116fb051908bd2151ce48e57e00222e08be47fcfe9cdcdcb70 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The code-signing certificate was verified using trusted certificate authority certificates
+
+```
+
 ## Trade-offs
 
 - **FastAPI over Flask:** better for my Python background and for writing meaningful Semgrep custom rules later (typed endpoints).
@@ -301,11 +324,11 @@ oTotal: 6 (UNKNOWN: 0, LOW: 1, MEDIUM: 5, HIGH: 0, CRITICAL: 0)
 | Branch protection, required reviews (1.0) | PR.AC-4 (access permissions) | CC6.1 (logical access) |
 | Secret scanning (2.0) | PR.DS-1 (data-at-rest protection) | CC6.7 (encryption/keys) |
 | SAST (2.0) built, IaC/image (3.0) | DE.CM-8 (vuln scanning)  | CC7.1 (vuln mgmt) |
-| Image signing + SBOM (4.0, planned) | PR.DS-6 (integrity checking) |  CC7.2   |
+| Image signing + SBOM (4.0) | PR.DS-6 (integrity checking) |  CC7.2   |
 
 ## Cost
 
-Phase 1.0 + Phase 2.0 + Phase 3.0: **\$0** – GitHub Actions free tier (public repo), no cloud resources (null Terraform provider), no third-party SaaS. Later phases stay $0: all scanners are OSS, Cosign keyless uses free Sigstore infrastructure.
+Phase 1.0 + Phase 2.0 + Phase 3.0 + Phase 4.0: **\$0** – GitHub Actions free tier (public repo), no cloud resources (null Terraform provider), no third-party SaaS. Later phases stay $0: all scanners are OSS, Cosign keyless uses free Sigstore infrastructure.
 
 
 ## Teardown
@@ -326,5 +349,5 @@ No cloud resources, no credentials, no cost to unwind.
 - [X] **1.0 Foundations** – sample app, baseline CI, branch protection (this phase)
 - [X] **2.0 Secrets && SAST** – Gitleaks CI job, Semgrep + CWE Top 25 custom rules
 - [x] **3.0 IaC & image scanning** – Checkov, Trivy fs+image, SARIF, severity gates
-- [ ] **4.0 Signing & SBOM** – Cosign keyless, SBOM attestation, `verify.sh`
+- [x] **4.0 Signing & SBOM** – Cosign keyless, SBOM attestation, `verify.sh`
 - [ ] **5.0 Docs & case study** – diagram, demo GIF, mananqayas.com write-up
