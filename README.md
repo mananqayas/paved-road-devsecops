@@ -31,7 +31,7 @@ Service teams ship fast and security reviews don't scale. Without a paved road, 
                  └────────────────────────┘
 ```
 
-+ *On every PR / push:* pytest, docker build, terraform validate, Gitleaks secrets, Semgrep SAST (25 custom CVE rules), Checkov IaC, Trivy Dockerfile + image scans - any failure blocks merge; SARIF to code scanning.
++ *On every PR / push:* pytest, docker build, terraform validate, Gitleaks secrets, Semgrep SAST (25 custom CWE rules), Checkov IaC, Trivy Dockerfile + image scans - any failure blocks merge; SARIF to code scanning.
 + *On merge to main:* push to GHCR, Cosign keyless sign, Trivy SBOM + attestation, `verify.sh` + negative tests re-prove verification.
 
 ## Threat model
